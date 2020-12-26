@@ -1,2 +1,4 @@
-hello f
-bye f
+print('hello world')
+y = 0
+for x in range(1200):
+    y+= 1

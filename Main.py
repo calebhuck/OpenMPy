@@ -1,20 +1,19 @@
 import sys
 from antlr4 import *
-from gen.HelloLexer import HelloLexer
-from gen.HelloParser import HelloParser
-from gen.HelloListener import *
-from Rule1Printer import Rule1Printer
+from gen.GrammarLexer import GrammarLexer
+from gen.GrammarParser import GrammarParser
+from gen.GrammarVisitor import *
+from SimplePrinter import SimplePrinter
 
 
 def main():
     input_stream = FileStream('Test.txt')
-    lexer = HelloLexer(input_stream)
+    lexer = GrammarLexer(input_stream)
     stream = CommonTokenStream(lexer)
-    parser = HelloParser(stream)
-    tree = parser.rule1()
-    printer = Rule1Printer()
-    walker = ParseTreeWalker()
-    walker.walk(printer, tree)
+    parser = GrammarParser(stream)
+    tree = parser.file_input()
+    visitor = SimplePrinter()
+    visitor.visit(tree)
 
 
 if __name__ == '__main__':
