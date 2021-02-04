@@ -139,8 +139,8 @@ omp_stmt: '#pragma omp' omp_directive+ omp_clause*;
 
 omp_directive: ('parallel' | 'for' | 'sections' | 'section' | 'barrier' | 'atomic') ;
 
-omp_clause: 'num_threads('NUMBER ')' ;
-
+omp_clause: 'num_threads(' thread_num ')' ;
+thread_num: NUMBER ;
 
 simple_stmt: small_stmt (';' small_stmt)* (';')? NEWLINE;
 compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt;

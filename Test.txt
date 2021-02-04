@@ -3,7 +3,7 @@ y = 0
 for x in range(1200):
     y+= 1
 #comment
-#pragma omp parallel for num_threads(0)
+#pragma omp parallel for num_threads(1)
 # comment
 for x in range(1200):
     y+= 1
