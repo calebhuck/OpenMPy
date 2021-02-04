@@ -2,3 +2,9 @@ print('hello world')
 y = 0
 for x in range(1200):
     y+= 1
+# blah
+#comment
+#pragma parallel for
+# comment
+for x in range(1200):
+    y+= 1

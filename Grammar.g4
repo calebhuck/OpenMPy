@@ -132,8 +132,24 @@ def atStartOfInput(self):
  * parser rules
  */
 
-single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE;
 file_input: (NEWLINE | stmt)* EOF;
+stmt: simple_stmt | compound_stmt | omp_stmt;
+
+omp_stmt: '#pragma omp' OMP_DIRECTIVE+ omp_clause+;
+
+omp_clause: CLAUSE
+OMP_DIRECTIVE:
+   'parallel'
+ | 'for'
+ | 'sections'
+ | 'section'
+ | 'barrier'
+ | 'atomic'
+ ;
+
+simple_stmt: small_stmt (';' small_stmt)* (';')? NEWLINE;
+compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt;
+single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE;
 eval_input: testlist NEWLINE* EOF;
 
 decorator: '@' dotted_name ( '(' (arglist)? ')' )? NEWLINE;
@@ -158,8 +174,6 @@ varargslist: (vfpdef ('=' test)? (',' vfpdef ('=' test)?)* (',' (
 );
 vfpdef: NAME;
 
-stmt: simple_stmt | compound_stmt;
-simple_stmt: small_stmt (';' small_stmt)* (';')? NEWLINE;
 small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
              import_stmt | global_stmt | nonlocal_stmt | assert_stmt);
 expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
@@ -191,7 +205,6 @@ global_stmt: 'global' NAME (',' NAME)*;
 nonlocal_stmt: 'nonlocal' NAME (',' NAME)*;
 assert_stmt: 'assert' test (',' test)?;
 
-compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt;
 async_stmt: ASYNC (funcdef | with_stmt | for_stmt);
 if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ('else' ':' suite)?;
 while_stmt: 'while' test ':' suite ('else' ':' suite)?;
@@ -353,7 +366,7 @@ except ValueError:
     nextnext_eof = True
 else:
     nextnext_eof = False
-if self.opened > 0 or nextnext_eof is False and (la_char == '\r' or la_char == '\n' or la_char == '\f' or la_char == '#'):
+if self.opened > 0 or nextnext_eof is False and (la_char == '\r' or la_char == '\n' or la_char == '\f'): #changed this to allow OMP comments or la_char == '#'):
     self.skip()
 else:
     indent = self.getIndentationCount(spaces)
@@ -602,8 +615,19 @@ fragment SPACES
  : [ \t]+
  ;
 
+//fragment COMMENT
+// : '#' ~[\r\n\f]*
+// ;
+
 fragment COMMENT
- : '#' ~[\r\n\f]*
+ :
+ '#' ~[p] ~[\r\n\f]*
+ | '#p' ~[r] ~[\r\n\f]*
+ | '#pr' ~[a] ~[\r\n\f]*
+ | '#pra' ~[g] ~[\r\n\f]*
+ | '#prag' ~[m] ~[\r\n\f]*
+ | '#pragm' ~[a] ~[\r\n\f]*
+ //| '#pragma' ~[ ] ~[\r\n\f]*
  ;
 
 fragment LINE_JOINING

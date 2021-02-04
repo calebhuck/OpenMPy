@@ -1,9 +1,9 @@
 import sys
-from antlr4 import *
-from gen.GrammarLexer import GrammarLexer
-from gen.GrammarParser import GrammarParser
-from gen.GrammarVisitor import *
-from SimplePrinter import SimplePrinter
+sys.path.append("./")
+from antlr_parser.GrammarLexer import GrammarLexer
+from antlr_parser.GrammarParser import GrammarParser
+from antlr_parser.GrammarVisitor import *
+from Translator import Translator
 
 
 def main():
@@ -12,7 +12,7 @@ def main():
     stream = CommonTokenStream(lexer)
     parser = GrammarParser(stream)
     tree = parser.file_input()
-    visitor = SimplePrinter()
+    visitor = Translator()
     visitor.visit(tree)
 
 
