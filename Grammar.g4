@@ -135,17 +135,12 @@ def atStartOfInput(self):
 file_input: (NEWLINE | stmt)* EOF;
 stmt: simple_stmt | compound_stmt | omp_stmt;
 
-omp_stmt: '#pragma omp' OMP_DIRECTIVE+ omp_clause+;
+omp_stmt: '#pragma omp' omp_directive+ omp_clause*;
 
-omp_clause: CLAUSE
-OMP_DIRECTIVE:
-   'parallel'
- | 'for'
- | 'sections'
- | 'section'
- | 'barrier'
- | 'atomic'
- ;
+omp_directive: ('parallel' | 'for' | 'sections' | 'section' | 'barrier' | 'atomic') ;
+
+omp_clause: 'num_threads('NUMBER ')' ;
+
 
 simple_stmt: small_stmt (';' small_stmt)* (';')? NEWLINE;
 compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt;
