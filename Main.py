@@ -7,13 +7,18 @@ from Translator import Translator
 
 
 def main():
-    input_stream = FileStream('Test.txt')
+    input_stream = FileStream('Test.py')
     lexer = GrammarLexer(input_stream)
     stream = CommonTokenStream(lexer)
+
+
+
+    #print(stream.getText())
     parser = GrammarParser(stream)
     tree = parser.file_input()
-    visitor = Translator()
-    visitor.visit(tree)
+    #print(tree.getText())
+    #visitor = Translator()
+    #visitor.visit(tree)
 
 
 if __name__ == '__main__':

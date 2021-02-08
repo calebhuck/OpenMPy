@@ -11,7 +11,7 @@ class Translator(GrammarVisitor):
         #print('for statement')
         return self.visitChildren(ctx)
 
-    def visitOmp_stmt(self, ctx: GrammarParser.For_stmtContext):
+    '''def visitOmp_stmt(self, ctx: GrammarParser.For_stmtContext):
         #print('omp statement')
         thread_num = ctx.getChild(ctx.getChildCount())
         print('threadnum = ', thread_num)
@@ -21,4 +21,4 @@ class Translator(GrammarVisitor):
 
     def visitThread_num(self, ctx: GrammarParser.Thread_numContext):
 
-        return ctx.NUMBER()
+        return ctx.NUMBER()'''
