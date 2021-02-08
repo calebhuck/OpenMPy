@@ -137,9 +137,21 @@ stmt: simple_stmt | compound_stmt | omp_stmt;
 
 omp_stmt: '#pragma omp' omp_directive+ omp_clause*;
 
-omp_directive: ('parallel' | 'for' | 'sections' | 'section' | 'barrier' | 'atomic') ;
+omp_directive: parallel_directive
+             | for_directive
+             | sections_directive
+             | section_directive
+             | barrier_directive
+             | atomic_directive
+             ;
+parallel_directive: 'parallel' ;
+for_directive: 'for' ;
+sections_directive: 'sections' ;
+section_directive: 'section' ;
+barrier_directive: 'barrier' ;
+atomic_directive: 'atomic' ;
 
-omp_clause: 'num_threads('NUMBER ')' ;
+omp_clause: 'num_threads('NUMBER')' ;
 
 
 simple_stmt: small_stmt (';' small_stmt)* (';')? NEWLINE;
@@ -467,7 +479,7 @@ POWER_ASSIGN : '**=';
 IDIV_ASSIGN : '//=';
 
 SKIP_
- : ( SPACES | COMMENT | LINE_JOINING ) -> skip
+ : ( SPACES | COMMENT | LINE_JOINING ) -> channel(HIDDEN) //-> skip
  ;
 
 UNKNOWN_CHAR
