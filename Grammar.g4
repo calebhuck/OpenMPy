@@ -213,7 +213,7 @@ nonlocal_stmt: 'nonlocal' NAME (',' NAME)*;
 assert_stmt: 'assert' test (',' test)?;
 
 async_stmt: ASYNC (funcdef | with_stmt | for_stmt);
-if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ('else' ':' suite)?;
+if_stmt: 'if' test ':' num_suite+=suite ('elif' test ':' num_suite+=suite)* ('else' ':' num_suite+=suite)?;
 while_stmt: 'while' test ':' suite ('else' ':' suite)?;
 for_stmt: 'for' exprlist 'in' testlist ':' suite ('else' ':' suite)?;
 try_stmt: ('try' ':' suite
@@ -225,35 +225,35 @@ with_stmt: 'with' with_item (',' with_item)*  ':' suite;
 with_item: test ('as' expr)?;
 // NB compile.c makes sure that the default except clause is last
 except_clause: 'except' (test ('as' NAME)?)?;
-suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT;
+suite: simple_stmt | NEWLINE INDENT num_stmt+=stmt+ DEDENT;
 
 test: or_test ('if' or_test 'else' test)? | lambdef;
 test_nocond: or_test | lambdef_nocond;
 lambdef: 'lambda' (varargslist)? ':' test;
 lambdef_nocond: 'lambda' (varargslist)? ':' test_nocond;
-or_test: and_test ('or' and_test)*;
-and_test: not_test ('and' not_test)*;
+or_test: and_test (num_or+='or' and_test)*;
+and_test: not_test (num_and+='and' not_test)*;
 not_test: 'not' not_test | comparison;
-comparison: expr (comp_op expr)*;
+comparison: expr (num_comp+=comp_op expr)*;
 // <> isn't actually a valid comparison operator in Python. It's here for the
 // sake of a __future__ import described in PEP 401 (which really works :-)
 comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not';
 star_expr: '*' expr;
-expr: xor_expr ('|' xor_expr)*;
-xor_expr: and_expr ('^' and_expr)*;
-and_expr: shift_expr ('&' shift_expr)*;
-shift_expr: arith_expr (('<<'|'>>') arith_expr)*;
-arith_expr: term (('+'|'-') term)*;
-term: factor (('*'|'@'|'/'|'%'|'//') factor)*;
+expr: xor_expr (num_or+='|' xor_expr)*;
+xor_expr: and_expr (num_xor+='^' and_expr)*;
+and_expr: shift_expr (num_and+='&' shift_expr)*;
+shift_expr: arith_expr (num_shift+=('<<'|'>>') arith_expr)*;
+arith_expr: term (num_arith+=('+'|'-') term)*;
+term: factor (num_term+=('*'|'@'|'/'|'%'|'//') factor)*;
 factor: ('+'|'-'|'~') factor | power;
 power: atom_expr ('**' factor)?;
-atom_expr: (AWAIT)? atom trailer*;
-atom: ('(' (yield_expr|testlist_comp)? ')' |
+atom_expr: (AWAIT)? atom num_trailer+=trailer*;
+atom: ('(' (is_yield+=yield_expr|testlist_comp)? ')' |
        '[' (testlist_comp)? ']' |
        '{' (dictorsetmaker)? '}' |
        NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False');
 testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* (',')? );
-trailer: '(' (arglist)? ')' | '[' subscriptlist ']' | '.' NAME;
+trailer: '(' (is_arglist+=arglist)? ')' | '[' subscriptlist ']' | '.' NAME;
 subscriptlist: subscript (',' subscript)* (',')?;
 subscript: test | (test)? ':' (test)? (sliceop)?;
 sliceop: ':' (test)?;
@@ -266,7 +266,7 @@ dictorsetmaker: ( ((test ':' test | '**' expr)
 
 classdef: 'class' NAME ('(' (arglist)? ')')? ':' suite;
 
-arglist: argument (',' argument)*  (',')?;
+arglist: num_arg+=argument (',' num_arg+=argument)*  (',')?;
 
 // The reason that keywords are test nodes instead of NAME is that using NAME
 // results in an ambiguity. ast.c makes sure it's a NAME.
@@ -277,7 +277,7 @@ arglist: argument (',' argument)*  (',')?;
 // Illegal combinations and orderings are blocked in ast.c:
 // multiple (test comp_for) arguments are blocked; keyword unpackings
 // that precede iterable unpackings are blocked; etc.
-argument: ( test (comp_for)? |
+argument: ( test (is_compfor+=comp_for)? |
             test '=' test |
             '**' test |
             '*' test );
