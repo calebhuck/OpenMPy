@@ -468,7 +468,27 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#try_stmt.
     def visitTry_stmt(self, ctx:GrammarParser.Try_stmtContext):
-        return self.visitChildren(ctx)
+        self.printer.print('try:')
+        self.visitSuite(ctx.suite(0))
+        print(ctx.except_clause())
+        suite_counter = 1
+        if ctx.except_clause() != []:
+            for clause in ctx.except_clause():
+                self.printer.print(self.visitExcept_clause(clause) + ':')
+                self.visitSuite(ctx.suite(suite_counter))
+                suite_counter += 1
+            if ctx.ELSE() is not None:
+                self.printer.print('else:')
+                self.visitSuite(ctx.suite(suite_counter))
+                suite_counter += 1
+            if ctx.FINALLY() is not None:
+                self.printer.print('finally:')
+                self.visitSuite(ctx.suite(suite_counter))
+        else:
+            self.printer.print('finally:')
+            self.visitSuite(ctx.suite(suite_counter))
+
+
 
 
     # Visit a parse tree produced by GrammarParser#with_stmt.
@@ -483,7 +503,13 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#except_clause.
     def visitExcept_clause(self, ctx:GrammarParser.Except_clauseContext):
-        return self.visitChildren(ctx)
+        count = ctx.getChildCount()
+        if count == 1:
+            return 'except'
+        elif count == 2:
+            return 'except ' + self.visit(ctx.getChild(1))
+        else:
+            return 'except ' + self.visit(ctx.getChild(1)) + ' as ' + ctx.getChild(3).getSymbol().text
 
 
     # Visit a parse tree produced by GrammarParser#suite.
@@ -740,7 +766,7 @@ class Translator(GrammarVisitor):
         str = ''
         if ctx.OPEN_PAREN() is not None:
             str += '('
-            if ctx.is_arglist != 0:
+            if len(ctx.is_arglist) != 0:
                 str += self.visitArglist(ctx.arglist())
             str += ')'
 
