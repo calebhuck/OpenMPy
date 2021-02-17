@@ -205,7 +205,7 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#small_stmt.
     def visitSmall_stmt(self, ctx:GrammarParser.Small_stmtContext):
-        print(type(ctx.getChild(0)))
+        #print(type(ctx.getChild(0)))
         return self.visitChildren(ctx)
 
     # Visit a parse tree produced by GrammarParser#expr_stmt.
@@ -327,47 +327,103 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#import_from.
     def visitImport_from(self, ctx:GrammarParser.Import_fromContext):
-        return self.visitChildren(ctx)
+        str = 'from '
+        count = ctx.getChildCount()
+        for i in range(1, count):
+            if isinstance(ctx.getChild(i), TerminalNode):
+                txt = ctx.getChild(i).getSymbol().text
+                if txt == 'import':
+                    str += ' import '
+                else:
+                    str += txt
+            else:
+                print('blah')
+                str += self.visit(ctx.getChild(i))
+        return str
+
 
 
     # Visit a parse tree produced by GrammarParser#import_as_name.
     def visitImport_as_name(self, ctx:GrammarParser.Import_as_nameContext):
-        return self.visitChildren(ctx)
+        count = ctx.getChildCount()
+        if count == 1:
+            return ctx.getChild(0).getSymbol().text
+        else:
+            return ctx.getChild(0).getSymbol().text + ' as ' + ctx.getChild(2).getSymbol().text
 
 
     # Visit a parse tree produced by GrammarParser#dotted_as_name.
     def visitDotted_as_name(self, ctx:GrammarParser.Dotted_as_nameContext):
-        return self.visitChildren(ctx)
+        count = ctx.getChildCount()
+        if count == 1:
+            return self.visit(ctx.getChild(0))
+        else:
+            return self.visit(ctx.getChild(0)) + ' as ' + ctx.NAME().getSymbol().text
 
 
     # Visit a parse tree produced by GrammarParser#import_as_names.
     def visitImport_as_names(self, ctx:GrammarParser.Import_as_namesContext):
-        return self.visitChildren(ctx)
+        str = ''
+        count = ctx.getChildCount()
+        for i in range(count):
+            if isinstance(ctx.getChild(i), TerminalNode):
+                str += ', '
+            else:
+                str += self.visit(ctx.getChild(i))
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#dotted_as_names.
     def visitDotted_as_names(self, ctx:GrammarParser.Dotted_as_namesContext):
-        return self.visitChildren(ctx)
+        str = ''
+        count = ctx.getChildCount()
+        for i in range(count):
+            if isinstance(ctx.getChild(i), TerminalNode):
+                str += ', '
+            else:
+                str += self.visit(ctx.getChild(i))
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#dotted_name.
     def visitDotted_name(self, ctx:GrammarParser.Dotted_nameContext):
-        return self.visitChildren(ctx)
+        str = ''
+        for i in range(ctx.getChildCount()):
+            str += ctx.getChild(i).getSymbol().text
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#global_stmt.
     def visitGlobal_stmt(self, ctx:GrammarParser.Global_stmtContext):
-        return self.visitChildren(ctx)
+        str = 'global '
+        for i in range(1, ctx.getChildCount()):
+            if ctx.getChild(i).getSymbol().text == ',':
+                str +=', '
+            else:
+                str += ctx.getChild(i).getSymbol().text
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#nonlocal_stmt.
     def visitNonlocal_stmt(self, ctx:GrammarParser.Nonlocal_stmtContext):
-        return self.visitChildren(ctx)
+        str = 'nonlocal '
+        for i in range(1, ctx.getChildCount()):
+            if ctx.getChild(i).getSymbol().text == ',':
+                str +=', '
+            else:
+                str += ctx.getChild(i).getSymbol().text
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#assert_stmt.
     def visitAssert_stmt(self, ctx:GrammarParser.Assert_stmtContext):
-        return self.visitChildren(ctx)
+        str = 'assert '
+        for i in range(1, ctx.getChildCount()):
+            if isinstance(ctx.getChild(i), TerminalNode):
+                str +=', '
+            else:
+                str += self.visit(ctx.getChild(i))
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#async_stmt.
