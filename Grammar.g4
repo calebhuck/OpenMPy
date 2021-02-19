@@ -133,8 +133,8 @@ def atStartOfInput(self):
  */
 
 file_input: (NEWLINE | stmt)* EOF;
-stmt: simple_stmt | compound_stmt | omp_stmt;
-
+stmt: simple_stmt | compound_stmt | omp_stmt | comment;
+comment: '#' .+? NEWLINE;
 omp_stmt: '#pragma omp' omp_directive+ omp_clause*;
 
 omp_directive: parallel_directive
@@ -151,7 +151,7 @@ section_directive: 'section' ;
 barrier_directive: 'barrier' ;
 atomic_directive: 'atomic' ;
 
-omp_clause: 'num_threads('NUMBER')' ;
+omp_clause: 'num_threads(' NUMBER ')' ;
 
 
 simple_stmt: small_stmt (';' small_stmt)* (';')? NEWLINE;
@@ -244,16 +244,16 @@ xor_expr: and_expr (num_xor+='^' and_expr)*;
 and_expr: shift_expr (num_and+='&' shift_expr)*;
 shift_expr: arith_expr (num_shift+=('<<'|'>>') arith_expr)*;
 arith_expr: term (num_arith+=('+'|'-') term)*;
-term: factor (num_term+=('*'|'@'|'/'|'%'|'//') factor)*;
+term: factor (('*'|'@'|'/'|'%'|'//') factor)*;
 factor: ('+'|'-'|'~') factor | power;
 power: atom_expr ('**' factor)?;
 atom_expr: (AWAIT)? atom num_trailer+=trailer*;
-atom: ('(' (is_yield+=yield_expr|testlist_comp)? ')' |
+atom: ('(' (yield_expr|testlist_comp)? ')' |
        '[' (testlist_comp)? ']' |
        '{' (dictorsetmaker)? '}' |
        NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False');
 testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* (',')? );
-trailer: '(' (is_arglist+=arglist)? ')' | '[' subscriptlist ']' | '.' NAME;
+trailer: '(' (arglist)? ')' | '[' subscriptlist ']' | '.' NAME;
 subscriptlist: subscript (',' subscript)* (',')?;
 subscript: test | (test)? ':' (test)? (sliceop)?;
 sliceop: ':' (test)?;
@@ -373,7 +373,7 @@ except ValueError:
     nextnext_eof = True
 else:
     nextnext_eof = False
-if self.opened > 0 or nextnext_eof is False and (la_char == '\r' or la_char == '\n' or la_char == '\f'): #changed this to allow OMP comments or la_char == '#'):
+if self.opened > 0 or nextnext_eof is False and (la_char == '\r' or la_char == '\n' or la_char == '\f'): #): #changed this to allow OMP comments  or la_char == '#'
     self.skip()
 else:
     indent = self.getIndentationCount(spaces)
@@ -478,8 +478,12 @@ RIGHT_SHIFT_ASSIGN : '>>=';
 POWER_ASSIGN : '**=';
 IDIV_ASSIGN : '//=';
 
-SKIP_
- : ( SPACES | COMMENT | LINE_JOINING ) -> channel(HIDDEN) //-> skip
+/*SKIP_
+ : ( SPACES | COMMENT | LINE_JOINING ) -> skip
+ ;*/
+
+ SKIP_
+ : ( SPACES | LINE_JOINING ) -> skip
  ;
 
 UNKNOWN_CHAR
@@ -626,7 +630,7 @@ fragment SPACES
 // : '#' ~[\r\n\f]*
 // ;
 
-fragment COMMENT
+/*fragment COMMENT
  :
  '#' ~[p] ~[\r\n\f]*
  | '#p' ~[r] ~[\r\n\f]*
@@ -635,7 +639,7 @@ fragment COMMENT
  | '#prag' ~[m] ~[\r\n\f]*
  | '#pragm' ~[a] ~[\r\n\f]*
  //| '#pragma' ~[ ] ~[\r\n\f]*
- ;
+ ;*/
 
 fragment LINE_JOINING
  : '\\' SPACES? ( '\r'? '\n' | '\r' | '\f' )

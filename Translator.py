@@ -2,6 +2,7 @@ from antlr_parser.GrammarVisitor import *
 from antlr_parser.GrammarParser import *
 from antlr4 import TerminalNode
 #from printer.Printer import Printer
+import re
 
 
 class Translator(GrammarVisitor):
@@ -12,6 +13,18 @@ class Translator(GrammarVisitor):
     # Visit a parse tree produced by GrammarParser#file_input.
     def visitFile_input(self, ctx:GrammarParser.File_inputContext):
         return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#comment.
+    def visitComment(self, ctx:GrammarParser.CommentContext):
+        #return
+        str = ''
+        for i in range(ctx.getChildCount()):
+            str += ctx.getChild(i).getSymbol().text + ' '
+        if re.search('^#.*(\r?\n | \f).+(\r?\n | \f)\s*$', str):
+            print('illegal comment at line {}'.format(ctx.getChild(0).getSymbol().line))
+        #self.printer.print(str)
+        #self.printer.newline()
 
 
     # Visit a parse tree produced by GrammarParser#for_stmt.
@@ -302,17 +315,6 @@ class Translator(GrammarVisitor):
                 str += ', '
             else:
                 str += self.visit(ctx.getChild(i))
-        '''num_test = 0
-        num_star_expr = 0
-        for i in range(count):
-            if isinstance(ctx.getChild(i), TerminalNode):
-                str += ', '
-            elif isinstance(ctx.getChild(i), GrammarParser.TestContext):
-                str += self.visitTest(ctx.test(num_test))
-                num_test += 1
-            else:
-                str += self.visitStar_expr(ctx.star_expr(num_star_expr))
-                num_star_expr += 1'''
         return str
 
 
@@ -335,7 +337,7 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#flow_stmt.
     def visitFlow_stmt(self, ctx:GrammarParser.Flow_stmtContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.getChild(0))
 
 
     # Visit a parse tree produced by GrammarParser#break_stmt.
@@ -359,7 +361,7 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#yield_stmt.
     def visitYield_stmt(self, ctx:GrammarParser.Yield_stmtContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.getChild(0))
 
 
     # Visit a parse tree produced by GrammarParser#raise_stmt.
@@ -616,7 +618,7 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#test_nocond.
     def visitTest_nocond(self, ctx:GrammarParser.Test_nocondContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.getChild(0))
 
 
     # Visit a parse tree produced by GrammarParser#lambdef.
@@ -631,7 +633,12 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#lambdef_nocond.
     def visitLambdef_nocond(self, ctx:GrammarParser.Lambdef_nocondContext):
-        return self.visitChildren(ctx)
+        str = 'lambda '
+        if ctx.varargslist() is not None:
+            str += self.visitVarargslist(ctx.varargslist())
+        str += ': '
+        str += self.visitTest(ctx.test_nocond())
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#or_test.
@@ -750,21 +757,24 @@ class Translator(GrammarVisitor):
             return self.visitChildren(ctx)
         else:
             str = ''
-            str += self.visitFactor(ctx.factor(0))
-            for i in range(len(ctx.num_term)):
-                str += ' ' + ctx.getChild(i * 2 + 1).getSymbol().text + ' '
-                str += self.visitFactor(ctx.factor(i + 1))
+            for i in range(count):
+                if isinstance(ctx.getChild(i), TerminalNode):
+                    str += ' ' + ctx.getChild(i).getSymbol().text + ' '
+                else:
+                    str += self.visit(ctx.getChild(i))
             return str
+
 
     # Visit a parse tree produced by GrammarParser#factor.
     def visitFactor(self, ctx:GrammarParser.FactorContext):
         count = ctx.getChildCount()
         if count == 1:
-            return self.visitChildren(ctx)
+            return self.visit(ctx.getChild(0))
         else:
             str = ''
-            str += ' ' + ctx.getChild(0).getSymbol().text + ' '
-            str += self.visitFactor(ctx.factor(0))
+            str += ctx.getChild(0).getSymbol().text + ' '
+            str += self.visitFactor(ctx.factor())
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#power.
@@ -800,9 +810,9 @@ class Translator(GrammarVisitor):
         elif count == 3:
             if ctx.OPEN_PAREN() is not None:
                 str += '('
-                if ctx.is_yield == 1:
+                if ctx.yield_expr() is not None:
                     str += self.visitYield_expr(ctx.yield_expr())
-                else:
+                elif ctx.testlist_comp() is not None:
                     str += self.visitTestlist_comp(ctx.testlist_comp())
                 str += ')'
             elif ctx.OPEN_BRACK() is not None:
@@ -811,7 +821,7 @@ class Translator(GrammarVisitor):
                 str += ']'
             elif ctx.OPEN_BRACE() is not None:
                 str += '{'
-                str += self.visitTestlist_comp(ctx.dictorsetmaker())
+                str += self.visitDictorsetmaker(ctx.dictorsetmaker())
                 str += '}'
         elif count == 2:
             if ctx.OPEN_PAREN() is not None:
@@ -832,11 +842,13 @@ class Translator(GrammarVisitor):
     # Visit a parse tree produced by GrammarParser#testlist_comp.
     def visitTestlist_comp(self, ctx:GrammarParser.Testlist_compContext):
         count = ctx.getChildCount()
+        str = ''
         for i in range(count):
             if isinstance(ctx.getChild(i), TerminalNode):
-                self.printer.print(ctx.getChild(i).getSymbol().text + ' ')
+                str += ', '
             else:
-                self.visit(ctx.getChild(i))
+                str += self.visit(ctx.getChild(i))
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#trailer.
@@ -844,17 +856,17 @@ class Translator(GrammarVisitor):
         str = ''
         if ctx.OPEN_PAREN() is not None:
             str += '('
-            if len(ctx.is_arglist) != 0:
+            if ctx.arglist() is not None:
                 str += self.visitArglist(ctx.arglist())
             str += ')'
 
         elif ctx.OPEN_BRACK() is not None:
             str += '['
-            str += self.visitSubscriptlist()
+            str += self.visitSubscriptlist(ctx.subscriptlist())
             str += ']'
 
         else:
-            str += '.' + ctx.NAME().Symbol().getText()
+            str += '.' + ctx.NAME().getSymbol().text
         return str
 
 
@@ -888,7 +900,20 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#dictorsetmaker.
     def visitDictorsetmaker(self, ctx:GrammarParser.DictorsetmakerContext):
-        return self.visitChildren(ctx)
+        count = ctx.getChildCount()
+        str = ''
+        for i in range(count):
+            if isinstance(ctx.getChild(i), TerminalNode):
+                txt = ctx.getChild(i).getSymbol().text
+                if txt == ',':
+                    str += ', '
+                elif txt == '**':
+                    str += '**'
+                elif txt == ':':
+                    str += ': '
+            else:
+                str += self.visit(ctx.getChild(i))
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#classdef.
@@ -933,26 +958,27 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#comp_iter.
     def visitComp_iter(self, ctx:GrammarParser.Comp_iterContext):
-        return self.visitChildren(ctx)
+        return self.visit(ctx.getChild(0))
 
     # Visit a parse tree produced by GrammarParser#comp_for.
     def visitComp_for(self, ctx:GrammarParser.Comp_forContext):
-        # Not FInished **********************************************************************************
         str = ''
         if ctx.ASYNC() is not None:
-            str += ctx.ASYNC()[0].getSymbol().text + ' '
+            str += 'async '
         str += 'for ' + self.visitExprlist(ctx.exprlist()) + ' in ' + self.visitOr_test(ctx.or_test())
         if ctx.comp_iter() is not None:
             if ctx.comp_iter() == []:
                 print('visitComp_for problem, this shouldn\'t happen')
             str += self.visitComp_iter(ctx.comp_iter())
-
         return str
 
 
     # Visit a parse tree produced by GrammarParser#comp_if.
     def visitComp_if(self, ctx:GrammarParser.Comp_ifContext):
-        return self.visitChildren(ctx)
+        str = 'for ' + self.visit(ctx.getChild(0))
+        if ctx.comp_iter() is not None:
+            str += self.visitComp_iter(ctx.comp_iter())
+        return str
 
 
     # Visit a parse tree produced by GrammarParser#encoding_decl.
@@ -962,9 +988,15 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#yield_expr.
     def visitYield_expr(self, ctx:GrammarParser.Yield_exprContext):
-        return self.visitChildren(ctx)
+        str = 'yield'
+        if ctx.getChildCount() == 1:
+            return str
+        return str + ' ' + self.visit(ctx.getChild(1))
 
 
     # Visit a parse tree produced by GrammarParser#yield_arg.
     def visitYield_arg(self, ctx:GrammarParser.Yield_argContext):
-        return self.visitChildren(ctx)
+        count = ctx.getChildCount()
+        if count == 1:
+            return self.visit(ctx.getChild(0))
+        return 'from ' + self.visit(ctx.getChild(1))
