@@ -135,7 +135,8 @@ def atStartOfInput(self):
 file_input: (NEWLINE | stmt)* EOF;
 stmt: simple_stmt | compound_stmt | omp_stmt | comment;
 comment: '#' .+? NEWLINE;
-omp_stmt: '#pragma omp' omp_directive+ omp_clause*;
+//omp_stmt: '#pragma' 'omp' omp_directive+ omp_clause* (NEWLINE INDENT small_stmt DEDENT | suite)?;
+omp_stmt: '#pragma' 'omp' omp_directive ;
 
 omp_directive: parallel_directive
              | for_directive
@@ -144,14 +145,18 @@ omp_directive: parallel_directive
              | barrier_directive
              | atomic_directive
              ;
-parallel_directive: 'parallel' ;
+parallel_directive: 'parallel' (for_directive | sections_directive)? num_threads_clause?;
 for_directive: 'for' ;
 sections_directive: 'sections' ;
 section_directive: 'section' ;
+master_directive: 'master' ;
+single_directive: 'single' ;
+critical_directive: 'critical' ;
 barrier_directive: 'barrier' ;
 atomic_directive: 'atomic' ;
 
-omp_clause: 'num_threads(' NUMBER ')' ;
+
+num_threads_clause: 'num_threads(' NUMBER ')' ;
 
 
 simple_stmt: small_stmt (';' small_stmt)* (';')? NEWLINE;
