@@ -134,7 +134,8 @@ def atStartOfInput(self):
 
 file_input: (NEWLINE | stmt)* EOF;
 stmt: simple_stmt | compound_stmt | omp_stmt | comment;
-comment: '#' .+? NEWLINE;
+//comment: '#' .+? NEWLINE;
+comment: COMMENT_LINE ;
 //omp_stmt: '#pragma' 'omp' omp_directive+ omp_clause* (NEWLINE INDENT small_stmt DEDENT | suite)?;
 omp_stmt: '#pragma' 'omp' omp_directive ;
 
@@ -145,7 +146,7 @@ omp_directive: parallel_directive
              | barrier_directive
              | atomic_directive
              ;
-parallel_directive: 'parallel' (for_directive | sections_directive)? num_threads_clause?;
+parallel_directive: 'parallel' (for_directive | sections_directive)? num_threads_clause? NEWLINE;
 for_directive: 'for' ;
 sections_directive: 'sections' ;
 section_directive: 'section' ;
@@ -300,6 +301,28 @@ yield_arg: 'from' test | testlist;
 /*
  * lexer rules
  */
+
+
+/*
+// TESTING BROKEN***********************************************************************************************
+OMP_INT
+ : OMP_NON_ZERO OMP_INT*
+ | '0'+
+ ;
+fragment OMP_INT
+ : '0'..'9'
+ ;
+fragment OMP_NON_ZERO
+ : '1'..'9'
+ ;
+//********************************************************************************************************
+*/
+
+
+
+COMMENT_LINE
+: COMMENT NEWLINE
+;
 
 STRING
  : STRING_LITERAL
@@ -539,6 +562,7 @@ fragment DIGIT
  : [0-9]
  ;
 
+
 /// octdigit       ::=  "0"..."7"
 fragment OCT_DIGIT
  : [0-7]
@@ -635,7 +659,7 @@ fragment SPACES
 // : '#' ~[\r\n\f]*
 // ;
 
-/*fragment COMMENT
+fragment COMMENT
  :
  '#' ~[p] ~[\r\n\f]*
  | '#p' ~[r] ~[\r\n\f]*
@@ -644,7 +668,7 @@ fragment SPACES
  | '#prag' ~[m] ~[\r\n\f]*
  | '#pragm' ~[a] ~[\r\n\f]*
  //| '#pragma' ~[ ] ~[\r\n\f]*
- ;*/
+ ;
 
 fragment LINE_JOINING
  : '\\' SPACES? ( '\r'? '\n' | '\r' | '\f' )

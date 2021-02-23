@@ -10,6 +10,75 @@ class Translator(GrammarVisitor):
     def __init__(self, printer):
         self.printer = printer
 
+
+
+
+
+    # Visit a parse tree produced by GrammarParser#omp_stmt.
+    def visitOmp_stmt(self, ctx:GrammarParser.Omp_stmtContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#omp_directive.
+    def visitOmp_directive(self, ctx:GrammarParser.Omp_directiveContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#parallel_directive.
+    def visitParallel_directive(self, ctx:GrammarParser.Parallel_directiveContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#for_directive.
+    def visitFor_directive(self, ctx:GrammarParser.For_directiveContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#sections_directive.
+    def visitSections_directive(self, ctx:GrammarParser.Sections_directiveContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#section_directive.
+    def visitSection_directive(self, ctx:GrammarParser.Section_directiveContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#master_directive.
+    def visitMaster_directive(self, ctx:GrammarParser.Master_directiveContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#single_directive.
+    def visitSingle_directive(self, ctx:GrammarParser.Single_directiveContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#critical_directive.
+    def visitCritical_directive(self, ctx:GrammarParser.Critical_directiveContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#barrier_directive.
+    def visitBarrier_directive(self, ctx:GrammarParser.Barrier_directiveContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#atomic_directive.
+    def visitAtomic_directive(self, ctx:GrammarParser.Atomic_directiveContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#num_threads_clause.
+    def visitNum_threads_clause(self, ctx:GrammarParser.Num_threads_clauseContext):
+        print(ctx.NUMBER())
+        return self.visitChildren(ctx)
+
+
+
+
+
+
     # Visit a parse tree produced by GrammarParser#file_input.
     def visitFile_input(self, ctx:GrammarParser.File_inputContext):
         return self.visitChildren(ctx)
@@ -23,8 +92,8 @@ class Translator(GrammarVisitor):
             str += ctx.getChild(i).getSymbol().text + ' '
         if re.search('^#.*(\r?\n | \f).+(\r?\n | \f)\s*$', str):
             print('illegal comment at line {}'.format(ctx.getChild(0).getSymbol().line))
-        #self.printer.print(str)
-        #self.printer.newline()
+        self.printer.print(str)
+        self.printer.newline()
 
 
     # Visit a parse tree produced by GrammarParser#for_stmt.
@@ -91,51 +160,6 @@ class Translator(GrammarVisitor):
     # Visit a parse tree produced by GrammarParser#stmt.
     def visitStmt(self, ctx:GrammarParser.StmtContext):
         self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by GrammarParser#omp_stmt.
-    def visitOmp_stmt(self, ctx:GrammarParser.Omp_stmtContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by GrammarParser#omp_directive.
-    def visitOmp_directive(self, ctx:GrammarParser.Omp_directiveContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by GrammarParser#parallel_directive.
-    def visitParallel_directive(self, ctx:GrammarParser.Parallel_directiveContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by GrammarParser#for_directive.
-    def visitFor_directive(self, ctx:GrammarParser.For_directiveContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by GrammarParser#sections_directive.
-    def visitSections_directive(self, ctx:GrammarParser.Sections_directiveContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by GrammarParser#section_directive.
-    def visitSection_directive(self, ctx:GrammarParser.Section_directiveContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by GrammarParser#barrier_directive.
-    def visitBarrier_directive(self, ctx:GrammarParser.Barrier_directiveContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by GrammarParser#atomic_directive.
-    def visitAtomic_directive(self, ctx:GrammarParser.Atomic_directiveContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by GrammarParser#omp_clause.
-    def visitOmp_clause(self, ctx:GrammarParser.Omp_clauseContext):
-        return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by GrammarParser#simple_stmt.

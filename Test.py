@@ -12,6 +12,7 @@ with open('freq_response_points.csv') as file:
     x = []
     y = []
     first = True
+    #pragma omp parallel num_threads(5.5)
     for row in reader:
         x.append(float(row[0]))
         y.append(float(row[1]))
