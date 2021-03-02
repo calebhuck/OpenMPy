@@ -1,3 +1,3 @@
 venv/
 .idea/
-antlr_parser/
+ompy/antlr_generated/

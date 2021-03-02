@@ -1,5 +1,4 @@
-
-class Printer:
+class SourcePrinter:
 
     def __init__(self):
         self.source = ''

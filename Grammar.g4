@@ -141,23 +141,44 @@ omp_stmt: '#pragma' 'omp' omp_directive ;
 
 omp_directive: parallel_directive
              | for_directive
+             | parallel_for_directive
              | sections_directive
-             | section_directive
+             | parallel_sections_directive
              | barrier_directive
              | atomic_directive
              ;
-parallel_directive: 'parallel' (for_directive | sections_directive)? num_threads_clause? NEWLINE;
-for_directive: 'for' ;
-sections_directive: 'sections' ;
-section_directive: 'section' ;
-master_directive: 'master' ;
-single_directive: 'single' ;
-critical_directive: 'critical' ;
+// OpenMP Directives
+parallel_directive: 'parallel' num_threads? default? suite ;
+parallel_for_directive: 'parallel' 'for' num_threads? schedule? for_suite ;
+for_directive: 'for' for_suite ;
+sections_directive: 'sections' sections_suite ;
+parallel_sections_directive: 'parallel' 'sections' num_threads? sections_suite;
+section_directive: '#pragma' 'omp' 'section' suite;
+master_directive: 'master' suite;
+single_directive: 'single' suite;
+critical_directive: 'critical' suite;
 barrier_directive: 'barrier' ;
-atomic_directive: 'atomic' ;
+atomic_directive: 'atomic' simple_stmt; // separate from critical?
+
+// OpenMP Clauses
+num_threads: 'num_threads(' NUMBER ')' ;
+shared: 'shared(' NAME ')' ;
+private_: 'private(' NAME ')' ;
+first_private: 'firstprivate(' NAME ')' ;
+last_private: 'lastprivate(' NAME ')' ;
+default: 'default(' ('shared' | 'private' | 'firstprivate' | 'none') ')' ;
+copin: 'copin(' NAME ')' ;
+reduction: 'reduction(' ('+' | '-' | '*' | '/' | 'min' | 'max') ')' ;
+schedule: 'schedule(' SCHEDULE (',' NUMBER)? ')' ;
+nowait: 'nowait' ;
+
+for_suite: NEWLINE INDENT 'for' NAME 'in' NAME '('argument (',' argument)? (',' argument)? ')' ':' suite DEDENT ;
+sections_suite: NEWLINE INDENT section_directive DEDENT ;
 
 
-num_threads_clause: 'num_threads(' NUMBER ')' ;
+omp_for_stmt: 'blah' ;
+
+
 
 
 simple_stmt: small_stmt (';' small_stmt)* (';')? NEWLINE;
@@ -301,7 +322,7 @@ yield_arg: 'from' test | testlist;
 /*
  * lexer rules
  */
-
+SCHEDULE: 'static' | 'dynamic' | 'guided' | 'auto' | 'runtime' ;
 
 /*
 // TESTING BROKEN***********************************************************************************************

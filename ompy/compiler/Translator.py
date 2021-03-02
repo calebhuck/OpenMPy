@@ -1,7 +1,7 @@
-from antlr_parser.GrammarVisitor import *
-from antlr_parser.GrammarParser import *
+from ompy.antlr_generated.GrammarVisitor import *
+from ompy.antlr_generated.GrammarParser import *
 from antlr4 import TerminalNode
-#from printer.Printer import Printer
+import os
 import re
 
 
@@ -9,9 +9,93 @@ class Translator(GrammarVisitor):
 
     def __init__(self, printer):
         self.printer = printer
+        self.incrementing_target_id = 0
+
+
+    # Visit a parse tree produced by GrammarParser#file_input.
+    def visitFile_input(self, ctx:GrammarParser.File_inputContext):
+        self.printer.print('from ompy.runtime.parallel_manager import ParallelManager')
+        self.printer.newline()
+        self.printer.print('manager = ParallelManager()')
+        self.printer.newline()
+        return self.visitChildren(ctx)
 
 
 
+
+    # Visit a parse tree produced by GrammarParser#parallel_directive.
+    def visitParallel_directive(self, ctx:GrammarParser.Parallel_directiveContext):
+        if ctx.num_threads() is not None:
+             num_threads = self.visitNum_threads_clause(ctx.num_threads())
+        else:
+            # could also add environment variable support in future
+            num_threads = os.cpu_count()
+        if num_threads is None:
+            print('visitParallel_directive... fix this with error handling')
+        target_name = 'target_' + str(self.incrementing_target_id)
+        self.incrementing_target_id += 1
+        self.printer.print('def {}():'.format(target_name))
+        self.visitSuite(ctx.suite())
+        self.printer.print('manager.set_num_threads({})'.format(num_threads))
+        self.printer.newline()
+        self.printer.print('manager.submit({}})'.format(target_name))
+
+
+    # Visit a parse tree produced by GrammarParser#parallel_for_directive.
+    def visitParallel_for_directive(self, ctx:GrammarParser.Parallel_for_directiveContext):
+        if ctx.num_threads() is not None:
+             num_threads = self.visitNum_threads_clause(ctx.num_threads())
+        else:
+            # could also add environment variable support in future
+            num_threads = os.cpu_count()
+        if num_threads is None:
+            print('visitParallel_directive... fix this with error handling')
+
+        target_name = 'target_' + str(self.incrementing_target_id)
+        self.incrementing_target_id += 1
+        schedule, chunk = None, None
+        if ctx.schedule() is not None:
+            schedule, chunk = self.visitSchedule(ctx.schedule())
+            print('schedule = ', schedule)
+            print('chunk = ', chunk)
+
+        if schedule == 'static':
+            pass
+
+        self.printer.print('def {}():'.format(target_name))
+        self.printer.newline()
+        self.printer.print('while True:')
+        self.printer.newline()
+        #self.printer.print()
+        self.visitFor_suite(ctx.for_suite())
+
+        self.printer.print('manager.set_num_threads({})'.format(num_threads))
+        self.printer.newline()
+        self.printer.print('manager.submit({})'.format(target_name))
+
+
+    # Visit a parse tree produced by GrammarParser#for_suite.
+    def visitFor_suite(self, ctx:GrammarParser.For_suiteContext):
+        self.printer.newline()
+        self.printer.indent()
+        args = []
+        for arg in ctx.argument():
+            args.append(self.visitArgument(arg))
+        self.visitSuite(ctx.suite())
+        self.printer.dedent()
+        return args
+
+    # Visit a parse tree produced by GrammarParser#schedule.
+    def visitSchedule(self, ctx:GrammarParser.ScheduleContext):
+        schedule = ctx.SCHEDULE().getSymbol().text
+        if ctx.NUMBER() is not None:
+            try:
+                chunk = int(ctx.NUMBER().getSymbol().text)
+            except ValueError:
+                print('Error: schedule chunk must be an integer')
+        else:
+            chunk = None
+        return schedule, chunk
 
 
     # Visit a parse tree produced by GrammarParser#omp_stmt.
@@ -21,11 +105,6 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#omp_directive.
     def visitOmp_directive(self, ctx:GrammarParser.Omp_directiveContext):
-        return self.visitChildren(ctx)
-
-
-    # Visit a parse tree produced by GrammarParser#parallel_directive.
-    def visitParallel_directive(self, ctx:GrammarParser.Parallel_directiveContext):
         return self.visitChildren(ctx)
 
 
@@ -70,18 +149,21 @@ class Translator(GrammarVisitor):
 
 
     # Visit a parse tree produced by GrammarParser#num_threads_clause.
-    def visitNum_threads_clause(self, ctx:GrammarParser.Num_threads_clauseContext):
-        print(ctx.NUMBER())
-        return self.visitChildren(ctx)
+    def visitNum_threads_clause(self, ctx:GrammarParser.Num_threadsContext):
+        num = ctx.NUMBER().getSymbol().text
+        try:
+            num = int(num)
+            return num
+        except Exception as e:
+            lineno = ctx.start.line
+            # CHANGE THIS IN FUTURE WHEN WORKING ON ERROR HANDLING
+            print('Error in num_threads clause at line {}... {} is not valid'.format(lineno, num))
 
 
 
 
 
 
-    # Visit a parse tree produced by GrammarParser#file_input.
-    def visitFile_input(self, ctx:GrammarParser.File_inputContext):
-        return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by GrammarParser#comment.
@@ -628,6 +710,7 @@ class Translator(GrammarVisitor):
     # Visit a parse tree produced by GrammarParser#test.
     def visitTest(self, ctx:GrammarParser.TestContext):
         count = ctx.getChildCount()
+        #print(ctx.getChild(0).getSymbol().text, type(ctx.getChild(1)))
         if count == 1:
             return self.visitChildren(ctx)
         else:
