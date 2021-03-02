@@ -14,10 +14,10 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#file_input.
     def visitFile_input(self, ctx:GrammarParser.File_inputContext):
-        self.printer.print('from ompy.runtime.parallel_manager import ParallelManager')
+        '''self.printer.print('from ompy.runtime.parallel_manager import ParallelManager')
         self.printer.newline()
         self.printer.print('manager = ParallelManager()')
-        self.printer.newline()
+        self.printer.newline()'''
         return self.visitChildren(ctx)
 
 
@@ -38,7 +38,7 @@ class Translator(GrammarVisitor):
         self.visitSuite(ctx.suite())
         self.printer.print('manager.set_num_threads({})'.format(num_threads))
         self.printer.newline()
-        self.printer.print('manager.submit({}})'.format(target_name))
+        self.printer.print('manager.submit({})'.format(target_name))
 
 
     # Visit a parse tree produced by GrammarParser#parallel_for_directive.

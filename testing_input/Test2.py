@@ -12,12 +12,11 @@ with open('freq_response_points.csv') as file:
     x = []
     y = []
     first = True
-    #pragma omp parallel
-        for row in reader:
-            x.append(float(row[0]))
-            y.append(float(row[1]))
-        x = [round(num, 2) for num in x]
-        y = [round(num, 2) for num in y]
+    for row in reader:
+        x.append(float(row[0]))
+        y.append(float(row[1]))
+    x = [round(num, 2) for num in x]
+    y = [round(num, 2) for num in y]
 
     plt.plot(x, y, 'o')
     plt.axis([0, 15, -2, 2])
