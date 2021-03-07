@@ -1,6 +1,5 @@
 
-#pragma omp parallel for num_threads(5) schedule(static)
-    for x in range(10):
-        print('hello from ', x)
-        break
-
+#pragma omp parallel for schedule(dynamic, 3)
+    for x in range(18):
+        #print('x = ', x)
+        print('thread: ', omp_get_thread_num())

@@ -1,9 +1,12 @@
 from ompy.antlr_generated.GrammarLexer import GrammarLexer
 from ompy.antlr_generated.GrammarVisitor import *
 from ompy.antlr_generated.GrammarParser import GrammarParser
-from ompy.compiler.Translator import Translator
-from ompy.printer.source_printer import SourcePrinter
+from ompy.Translator import Translator
+from ompy.source_printer import SourcePrinter
 
+#needed for exec, import stmts don't work from string, will be required in input file later
+from ompy.omp_functions import *
+from ompy.runtime import *
 
 def main():
     input_stream = FileStream('testing_input/Test.py')

@@ -11,6 +11,11 @@ class SourcePrinter:
             self.source += self.indent_token
         self.source += str
 
+    def println(self, str):
+        for i in range(self.indent_level):
+            self.source += self.indent_token
+        self.source += str + '\n'
+
     def newline(self):
         self.source += '\n'
 

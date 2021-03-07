@@ -148,9 +148,9 @@ omp_directive: parallel_directive
              | atomic_directive
              ;
 // OpenMP Directives
-parallel_directive: 'parallel' num_threads? default? suite ;
-parallel_for_directive: 'parallel' 'for' num_threads? schedule? for_suite ;
-for_directive: 'for' for_suite ;
+parallel_directive: 'parallel' num_threads? shared? private_? suite ;
+parallel_for_directive: 'parallel' 'for' num_threads? schedule? shared? private_? for_suite ;
+for_directive: 'for' schedule? private_? for_suite ;
 sections_directive: 'sections' sections_suite ;
 parallel_sections_directive: 'parallel' 'sections' num_threads? sections_suite;
 section_directive: '#pragma' 'omp' 'section' suite;
@@ -162,8 +162,8 @@ atomic_directive: 'atomic' simple_stmt; // separate from critical?
 
 // OpenMP Clauses
 num_threads: 'num_threads(' NUMBER ')' ;
-shared: 'shared(' NAME ')' ;
-private_: 'private(' NAME ')' ;
+shared: 'shared(' NAME (',' NAME)* ')' ;
+private_: 'private(' NAME (',' NAME)* ')' ;
 first_private: 'firstprivate(' NAME ')' ;
 last_private: 'lastprivate(' NAME ')' ;
 default: 'default(' ('shared' | 'private' | 'firstprivate' | 'none') ')' ;
