@@ -9,7 +9,7 @@ from ompy.omp_functions import *
 from ompy.runtime import *
 
 def main():
-    input_stream = FileStream('testing_input/Test2.py')
+    input_stream = FileStream('testing_input/Test.py')
     lexer = GrammarLexer(input_stream)
     stream = CommonTokenStream(lexer)
     #print(stream.getText())

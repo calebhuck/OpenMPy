@@ -16,7 +16,7 @@ class Translator(GrammarVisitor):
     def visitFile_input(self, ctx:GrammarParser.File_inputContext):
         self.printer.println('try:')
         self.printer.indent()
-        self.printer.println('from Queue import queue')
+        self.printer.println('from Queue import Queue')
         self.printer.dedent()
         self.printer.println('except ModuleNotFoundError:')
         self.printer.indent()
