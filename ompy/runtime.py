@@ -28,6 +28,8 @@ def submit(fun, num_threads, args=None):
         threads = [OmpThread(i, target=fun, num_threads=num_threads, args=args) for i in range(num_threads)]
     for thread in threads:
         thread.start()
+    for thread in threads:
+        thread.join()
 
 
 class ForManager:
