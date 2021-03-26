@@ -21,7 +21,7 @@ class OmpThread(Thread):
         return self.num_threads
 
 
-def submit(fun, num_threads: int, args=None):
+def submit(fun, num_threads, args=None):
     if args is None:
         threads = [OmpThread(i, target=fun, num_threads=num_threads, args=()) for i in range(num_threads)]
     else:
