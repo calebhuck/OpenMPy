@@ -14,6 +14,13 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#file_input.
     def visitFile_input(self, ctx:GrammarParser.File_inputContext):
+        self.printer.println('import sys')
+        self.printer.println('sys.path.append(\'C:\\\\Users\\Caleb\\\\PycharmProjects\\\\OpenMPy\\\\ompy\')')
+        self.printer.println('import jarray')
+        self.printer.println('from omp_functions import *')
+        self.printer.println('from runtime import *')
+        #self.printer.println('from ompy.omp_functions import *')
+        #self.printer.println('from ompy.runtime import *')
         self.printer.println('try:')
         self.printer.indent()
         self.printer.println('from Queue import Queue')
@@ -22,10 +29,9 @@ class Translator(GrammarVisitor):
         self.printer.indent()
         self.printer.println('from queue import Queue')
         self.printer.dedent()
-        self.printer.println('from ompy.runtime import *')
-        self.printer.println('from threading import current_thread')
+        self.printer.println('from threading import current_thread\n\n')
         #self.printer.println('num_threads = 1')
-        return self.visitChildren(ctx)
+        self.visitChildren(ctx)
 
 
 
@@ -98,7 +104,7 @@ class Translator(GrammarVisitor):
         else:
             self.printer.println('schedule = {}'.format(schedule))
         self.printer.println('chunk = {}'.format(chunk))
-        self.printer.println('global num_threads')
+        #self.printer.println('global num_threads')
         #self.printer.println('for_manager = ForManager(schedule, chunk, num_threads)')
         self.visit(ctx.for_suite())
 
@@ -108,9 +114,9 @@ class Translator(GrammarVisitor):
     # Visit a parse tree produced by GrammarParser#for_suite.
     def visitFor_suite(self, ctx:GrammarParser.For_suiteContext):
         if isinstance(ctx.parentCtx, GrammarParser.Parallel_for_directiveContext):
-            self.printer.println('global schedule')
+            '''self.printer.println('global schedule')
             self.printer.println('global chunk')
-            self.printer.println('global num_threads')
+            self.printer.println('global num_threads')'''
             args = []
             for arg in ctx.argument():
                 args.append(self.visitArgument(arg))
@@ -127,7 +133,8 @@ class Translator(GrammarVisitor):
             self.printer.dedent()
             self.printer.println('else:')
             self.printer.indent()
-            self.printer.println('for_manager = comm_q.queue[0]')
+            self.printer.println('for_manager = comm_q.get()')
+            self.printer.println('comm_q.put(for_manager)')
             self.printer.dedent()
             #self.printer.println('if get_current_thread_id() == 0: for_manager.set_loop(arg1, arg2, arg3)')
             self.printer.println('while True:')
@@ -1007,8 +1014,15 @@ class Translator(GrammarVisitor):
         if ctx.AWAIT() is not None:
             str += 'await '
         str += self.visitAtom(ctx.atom())
-        for i in range(len(ctx.num_trailer)):
-            str += self.visitTrailer(ctx.trailer(i))
+
+        if ctx.atom().NAME() is not None:
+            if ctx.atom().NAME().getSymbol().text == 'print':
+                if ctx.trailer() is not None:
+                    if ctx.trailer(0).arglist() is not None:
+                        str += ' ' + self.visitArglist(ctx.trailer(0).arglist())
+            else:
+                for i in range(len(ctx.num_trailer)):
+                    str += self.visitTrailer(ctx.trailer(i))
         return str
 
 
@@ -1180,7 +1194,7 @@ class Translator(GrammarVisitor):
         str = ''
         if ctx.ASYNC() is not None:
             str += 'async '
-        str += 'for ' + self.visitExprlist(ctx.exprlist()) + ' in ' + self.visitOr_test(ctx.or_test())
+        str += ' for ' + self.visitExprlist(ctx.exprlist()) + ' in ' + self.visitOr_test(ctx.or_test())
         if ctx.comp_iter() is not None:
             if ctx.comp_iter() == []:
                 print('visitComp_for problem, this shouldn\'t happen')
@@ -1190,7 +1204,7 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#comp_if.
     def visitComp_if(self, ctx:GrammarParser.Comp_ifContext):
-        str = 'for ' + self.visit(ctx.getChild(0))
+        str = ' for ' + self.visit(ctx.getChild(0))
         if ctx.comp_iter() is not None:
             str += self.visitComp_iter(ctx.comp_iter())
         return str

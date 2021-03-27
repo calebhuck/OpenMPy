@@ -1,45 +1,37 @@
-from scipy.interpolate import interp1d
-from itertools import count
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
-import numpy as np
-import time
-import csv
-
-# retrieve the discrete points along the frequency response curve from csv file and plot them
-with open('freq_response_points.csv') as file:
-    reader = csv.reader(file)
-    x = []
-    y = []
-    first = True
-    for row in reader:
-        x.append(float(row[0]))
-        y.append(float(row[1]))
-    x = [round(num, 2) for num in x]
-    y = [round(num, 2) for num in y]
-
-    plt.plot(x, y, 'o')
-    plt.axis([0, 15, -2, 2])
-    plt.show()
-    # create a new set of 1000 evenly spaced x coordinates to plot the interpolated function
-    xnew = np.linspace(0, 15, num=1000, endpoint=True)
-
-    # create the interpolated function and plot along
-    interpY = interp1d(x, y, kind='quadratic', fill_value='extrapolate')
-    plt.plot(xnew, interpY(xnew), 'r-', x, y, 'o')
-    plt.show()
-
-with open('simulated_sound_input.csv') as soundfile:
-    reader = csv.reader(soundfile)
-    timestamps = []
-    frequencies = []
-    first = True
-    for row in reader:
-        timestamps.append(int(row[0]))
-        frequencies.append(float(row[1]))
-    print('Timesteps', timestamps, '\n', 'Corresponding Frequencies', frequencies)
-
+import sys
+sys.path.append('C:\\Users\Caleb\\PycharmProjects\\OpenMPy\\ompy')
+from omp_functions import *
+from runtime import *
 try:
-    pass
-finally:
-    pass
+    from Queue import Queue
+except ModuleNotFoundError:
+    from queue import Queue
+from threading import current_thread
+num_threads = 6
+schedule = 'static'
+chunk = 2
+def target_0(comm_q):
+    global schedule
+    global chunk
+    global num_threads
+    arg1 = 1
+    arg2 = None
+    arg3 = None
+    for_manager = None
+    if get_current_thread_id() == 0:
+        for_manager = ForManager(schedule, chunk, num_threads, arg1, arg2, arg3)
+        comm_q.put(for_manager)
+    else:
+        for_manager = comm_q.queue[0]
+    while True:
+        start, stop, step = for_manager.request()
+        for x in range(start, stop, step):
+            print('thread: ', omp_get_thread_num(), ' loop iteration: ', x)
+            num_threads = 1
+            def target_1(comm_q):
+                print('nested')
+            comm_q = Queue()
+            submit(target_1, num_threads, args=(comm_q,))
+        if for_manager.done(): break
+comm_q = Queue()
+submit(target_0, num_threads, args=(comm_q,))
