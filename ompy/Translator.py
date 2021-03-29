@@ -62,12 +62,8 @@ class Translator(GrammarVisitor):
         else:
             # could also add environment variable support in future
             num_threads = os.cpu_count()
-        if num_threads is None:
-            print('visitParallel_directive... fix this with error handling')
 
         self.printer.println('num_threads = {}'.format(num_threads))
-        target_name = 'target_' + str(self.incrementing_target_id)
-        self.incrementing_target_id += 1
         schedule, chunk, args = None, None, []
         if ctx.schedule() is not None:
             schedule, chunk = self.visitSchedule(ctx.schedule())
@@ -80,7 +76,9 @@ class Translator(GrammarVisitor):
 
 
         #self.printer.println('def {}(for_manager):'.format(target_name))
-        self.printer.println('def {}(comm_q):'.format(target_name))
+        target_name = 'target_' + str(self.incrementing_target_id)
+        self.incrementing_target_id += 1
+        self.printer.println('def {}(comm_q, for_manager):'.format(target_name))
         self.printer.indent()
 
         if ctx.shared() is not None:
@@ -91,7 +89,8 @@ class Translator(GrammarVisitor):
 
         self.visitFor_suite(ctx.for_suite())
         self.printer.println('comm_q = Queue()')
-        self.printer.println('submit({}, num_threads, args=(comm_q,))'.format(target_name))
+        self.printer.println('for_manager = ForManager(schedule, chunk, num_threads)')
+        self.printer.println('submit({}, num_threads, args=(comm_q, for_manager))'.format(target_name))
 
 
     # Visit a parse tree produced by GrammarParser#for_directive.
@@ -105,7 +104,7 @@ class Translator(GrammarVisitor):
             self.printer.println('schedule = {}'.format(schedule))
         self.printer.println('chunk = {}'.format(chunk))
         #self.printer.println('global num_threads')
-        #self.printer.println('for_manager = ForManager(schedule, chunk, num_threads)')
+        self.printer.println('for_manager = ForManager(schedule, chunk, num_threads)')
         self.visit(ctx.for_suite())
 
 
@@ -125,21 +124,23 @@ class Translator(GrammarVisitor):
                     self.printer.println('arg{} = {}'.format(i + 1, args[i]))
                 except IndexError:
                     self.printer.println('arg{} = None'.format(i + 1))
-            self.printer.println('for_manager = None')
+            #self.printer.println('for_manager = None')
             self.printer.println('if get_current_thread_id() == 0:')
             self.printer.indent()
-            self.printer.println('for_manager = ForManager(schedule, chunk, num_threads, arg1, arg2, arg3)')
-            self.printer.println('comm_q.put(for_manager)')
+            #self.printer.println('for_manager = ForManager(schedule, chunk, num_threads, arg1, arg2, arg3)')
+            self.printer.println('for_manager.setup(arg1, arg2, arg3)')
+            '''self.printer.println('comm_q.put(for_manager)')
             self.printer.dedent()
             self.printer.println('else:')
             self.printer.indent()
             self.printer.println('for_manager = comm_q.get()')
-            self.printer.println('comm_q.put(for_manager)')
+            self.printer.println('comm_q.put(for_manager)')'''
             self.printer.dedent()
             #self.printer.println('if get_current_thread_id() == 0: for_manager.set_loop(arg1, arg2, arg3)')
             self.printer.println('while True:')
             self.printer.indent()
             self.printer.println('start, stop, step = for_manager.request()')
+            #self.printer.println('if start == 0 and stop == 0: break')
             self.printer.print('for {} in range(start, stop, step):'.format(ctx.NAME(0)))
             self.visitSuite(ctx.suite())
             self.printer.println('if for_manager.done(): break')
@@ -156,7 +157,7 @@ class Translator(GrammarVisitor):
                 except IndexError:
                     self.printer.println('arg{} = None'.format(i + 1))
 
-            self.printer.println('for_manager = None')
+            '''self.printer.println('for_manager = None')
             self.printer.println('try:')
             self.printer.indent()
             self.printer.println('if get_current_thread_id() == 0:')
@@ -164,7 +165,7 @@ class Translator(GrammarVisitor):
             self.printer.println('for_manager = ForManager(schedule, chunk, num_threads, arg1, arg2, arg3)')
             self.printer.println('comm_q.put(for_manager)')
             self.printer.dedent()
-            self.printer.dedent()
+            self.printer.dedent()'''
             self.printer.println('except NameError:')
             self.printer.indent()
             self.printer.println('for_manager = ForManager(schedule, chunk, 1, arg1, arg2, arg3)')
