@@ -3,7 +3,7 @@ import random
 import jarray
 
 
-num_threads = 12
+num_threads = 2
 n = 10000000
 arr = jarray.array([1 for x in xrange(n)], 'i')
 result = jarray.array([0 for x in xrange(num_threads)], 'i')
@@ -20,7 +20,7 @@ print('sum = ', s_sum, '\n\n')
 
 
 t_start = time()
-#pragma omp parallel for num_threads(12) schedule(dynamic)
+#pragma omp parallel for num_threads(2)
     for x in range(len(arr)):
         '''sleep(1)
         print('thread: ', omp_get_thread_num(), ' loop iteration: ', x)'''
@@ -29,7 +29,6 @@ p_sum = 0
 for x in result:
     p_sum += x
 t_end = time()
-print('end: ', t_end)
 
 parallel_time = t_end - t_start
 
