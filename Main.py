@@ -5,8 +5,8 @@ from ompy.Translator import Translator
 from ompy.source_printer import SourcePrinter
 
 #needed for exec, import stmts don't work from string, will be required in input file later
-from ompy.omp_functions import *
-from ompy.runtime import *
+#from ompy.omp_functions import *
+#from ompy.runtime import *
 
 def main():
     input_stream = FileStream('testing_input/Test.py')
