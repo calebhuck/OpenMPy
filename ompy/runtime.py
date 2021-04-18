@@ -5,20 +5,35 @@ from math import floor
 from collections import deque
 from time import sleep
 
-barrier_lock = Lock()
-barrier_count = 0
-barrier_done = False
 
-def omp_barrier():
-    barrier_lock.acquire()
-    barrier_count += 1
-    if barrier_count == get_num_threads():
-        barrier_done = True
-    barrier_lock.release()
-    while not barrier_done:
-        continue
-    if get_current_thread_id() == 0:
-        barrier_done = 0
+class RuntimeManager:
+    def __init__(self, num_threads):
+        self.for_manager = None
+        self.num_threads = num_threads
+        self.barrier_lock = Lock()
+        self.barrier_count = 0
+        self.barrier_done = False
+        self.critical_lock = Lock()
+
+    def set_for(self, for_manager):
+        self.for_manager = for_manager
+
+    def get_for(self):
+        while self.for_manager is None:
+            continue
+        return self.for_manager
+
+    def barrier(self):
+        self.barrier_lock.acquire()
+        if self.barrier_count == 0:
+            self.barrier_done = False
+        self.barrier_count += 1
+        if self.barrier_count == get_num_threads():
+            self.barrier_done = True
+            self.barrier_count = 0
+        self.barrier_lock.release()
+        while not self.barrier_done:
+            continue
 
 def get_num_threads():
     try:

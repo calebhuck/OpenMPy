@@ -146,6 +146,7 @@ omp_directive: parallel_directive
              | parallel_sections_directive
              | barrier_directive
              | atomic_directive
+             | critical_directive
              ;
 // OpenMP Directives
 parallel_directive: 'parallel' num_threads? shared? private_? suite ;

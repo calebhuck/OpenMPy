@@ -42,7 +42,7 @@ class Translator(GrammarVisitor):
 
         target_name = '_target_' + str(self.incrementing_target_id)
         self.incrementing_target_id += 1
-        self.printer.println('def {}(_comm_q_):'.format(target_name))
+        self.printer.println('def {}(_manager_):'.format(target_name))
 
 
         if ctx.shared() is not None:
@@ -55,8 +55,9 @@ class Translator(GrammarVisitor):
             self.printer.dedent()
 
         self.visitSuite(ctx.suite())
-        self.printer.println('_comm_q_ = Queue()')
-        self.printer.println('submit({}, _num_threads_, args=(_comm_q_,))'.format(target_name))
+        #self.printer.println('_comm_q_ = Queue()')
+        self.printer.println('_manager_ = RuntimeManager(_num_threads_)')
+        self.printer.println('submit({}, _num_threads_, args=(_manager_,))'.format(target_name))
 
     # Visit a parse tree produced by GrammarParser#parallel_for_directive.
     def visitParallel_for_directive(self, ctx: GrammarParser.Parallel_for_directiveContext):
@@ -79,7 +80,7 @@ class Translator(GrammarVisitor):
         # self.printer.println('def {}(for_manager):'.format(target_name))
         target_name = '_target_' + str(self.incrementing_target_id)
         self.incrementing_target_id += 1
-        self.printer.println('def {}(_comm_q_, _for_manager_):'.format(target_name))
+        self.printer.println('def {}(_manager_):'.format(target_name))
         self.printer.indent()
 
         if ctx.shared() is not None:
@@ -88,9 +89,11 @@ class Translator(GrammarVisitor):
             self.visitPrivate_(ctx.private_())
 
         self.visitFor_suite(ctx.for_suite())
-        self.printer.println('_comm_q_ = Queue()')
+        #self.printer.println('_comm_q_ = Queue()')
         self.printer.println('_for_manager_ = ForManager(_schedule_, _chunk_, _num_threads_)')
-        self.printer.println('submit({}, _num_threads_, args=(_comm_q_, _for_manager_))'.format(target_name))
+        self.printer.println('_manager_ = RuntimeManager(_num_threads_)')
+        self.printer.println('_manager_.set_for(_for_manager_)')
+        self.printer.println('submit({}, _num_threads_, args=(_manager_,))'.format(target_name))
 
     # Visit a parse tree produced by GrammarParser#for_directive.
     def visitFor_directive(self, ctx: GrammarParser.For_directiveContext):
@@ -107,12 +110,13 @@ class Translator(GrammarVisitor):
         self.printer.println('if omp_get_thread_num() == 0:')
         self.printer.indent()
         self.printer.println('_for_manager_ = ForManager(_schedule_, _chunk_, _num_threads_)')
-        self.printer.println('_comm_q_.put(_for_manager_)')
+        #self.printer.println('_comm_q_.put(_for_manager_)')
+        self.printer.println('_manager_.set_for(_for_manager_)')
         self.printer.dedent()
         self.printer.println('else:')
         self.printer.indent()
-        self.printer.println('_for_manager_ = _comm_q_.get()')
-        self.printer.println('_comm_q_.put(_for_manager_)')
+        self.printer.println('_for_manager_ = _manager_.get_for()')
+        #self.printer.println('_comm_q_.put(_for_manager_)')
         self.printer.dedent()
         self.visit(ctx.for_suite())
 
@@ -220,11 +224,16 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#critical_directive.
     def visitCritical_directive(self, ctx: GrammarParser.Critical_directiveContext):
-        return self.visitChildren(ctx)
+        self.printer.println('_manager_.critical_lock.acquire()')
+        self.printer.dedent()
+        self.visitSuite(ctx.suite())
+        self.printer.indent()
+        self.printer.println('_manager_.critical_lock.release()')
+
 
     # Visit a parse tree produced by GrammarParser#barrier_directive.
     def visitBarrier_directive(self, ctx: GrammarParser.Barrier_directiveContext):
-        self.printer.println('omp_barrier()')
+        self.printer.println('_manager_.barrier()')
 
     # Visit a parse tree produced by GrammarParser#atomic_directive.
     def visitAtomic_directive(self, ctx: GrammarParser.Atomic_directiveContext):
