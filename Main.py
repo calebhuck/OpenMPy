@@ -9,7 +9,7 @@ from ompy.source_printer import SourcePrinter
 #from ompy.runtime import *
 
 def main():
-    input_stream = FileStream('testing_input/Test.py')
+    input_stream = FileStream('testing_input/barrier.py')
     lexer = GrammarLexer(input_stream)
     stream = CommonTokenStream(lexer)
     #print(stream.getText())

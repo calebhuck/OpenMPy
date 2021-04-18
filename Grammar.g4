@@ -157,11 +157,11 @@ section_directive: '#pragma' 'omp' 'section' suite;
 master_directive: 'master' suite;
 single_directive: 'single' suite;
 critical_directive: 'critical' suite;
-barrier_directive: 'barrier' ;
+barrier_directive: 'barrier' NEWLINE;
 atomic_directive: 'atomic' simple_stmt; // separate from critical?
 
 // OpenMP Clauses
-num_threads: 'num_threads(' NUMBER ')' ;
+num_threads: 'num_threads(' argument ')' ;
 shared: 'shared(' NAME (',' NAME)* ')' ;
 private_: 'private(' NAME (',' NAME)* ')' ;
 first_private: 'firstprivate(' NAME ')' ;

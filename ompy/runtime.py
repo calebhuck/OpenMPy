@@ -5,6 +5,30 @@ from math import floor
 from collections import deque
 from time import sleep
 
+barrier_lock = Lock()
+barrier_count = 0
+barrier_done = False
+
+def omp_barrier():
+    barrier_lock.acquire()
+    barrier_count += 1
+    if barrier_count == get_num_threads():
+        barrier_done = True
+    barrier_lock.release()
+    while not barrier_done:
+        continue
+    if get_current_thread_id() == 0:
+        barrier_done = 0
+
+def get_num_threads():
+    try:
+        return current_thread().get_num_threads()
+
+    except AttributeError:
+        # this can only happen if this is called from the mainthread, implying only
+        # one thread is running. This shouldn't happen in practice
+        return 1
+
 def get_current_thread_id():
     if current_thread().name == 'MainThread':
         return 0
@@ -138,17 +162,17 @@ class ForManager:
 
 
     def request(self):
-        self.lock.acquire()
         #sleep(1)
         if self.schedule == 'static' or self.schedule is None:
             id = get_current_thread_id()
             if len(self.static_iterations_stacks[id]) == 0:
-                self.lock.release()
+                #self.lock.release()
                 return 0, 0, 1
             iters = self.static_iterations_stacks[id].popleft()
-            self.lock.release()
+            #self.lock.release()
             return iters[0], iters[1], iters[2]
 
+        self.lock.acquire()
         if self.schedule == 'dynamic':
 
             if self.total_iterations_remaining < self.chunk:
