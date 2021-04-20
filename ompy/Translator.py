@@ -44,6 +44,8 @@ class Translator(GrammarVisitor):
         self.incrementing_target_id += 1
         self.printer.println('def {}(_manager_):'.format(target_name))
 
+        if ctx.reduction() is not None:
+
 
         if ctx.shared() is not None:
             self.printer.indent()
