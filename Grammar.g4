@@ -169,7 +169,7 @@ first_private: 'firstprivate(' NAME ')' ;
 last_private: 'lastprivate(' NAME ')' ;
 default: 'default(' ('shared' | 'private' | 'firstprivate' | 'none') ')' ;
 copin: 'copin(' NAME ')' ;
-reduction: 'reduction(' ('+' | '-' | '*' | '/' | 'min' | 'max') ')' ;
+reduction: 'reduction(' ('+' | '-' | '*' | 'min' | 'max' | '&' | '&&' | '|' | '||' | '^') ':' NAME (',' NAME)* ')' ;
 schedule: 'schedule(' SCHEDULE (',' NUMBER)? ')' ;
 nowait: 'nowait' ;
 
@@ -177,7 +177,6 @@ for_suite: NEWLINE INDENT 'for' NAME 'in' NAME '('argument (',' argument)? (',' 
 sections_suite: NEWLINE INDENT section_directive DEDENT ;
 
 
-omp_for_stmt: 'blah' ;
 
 
 

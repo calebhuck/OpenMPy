@@ -34,8 +34,8 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#parallel_directive.
     def visitParallel_directive(self, ctx: GrammarParser.Parallel_directiveContext):
-        if ctx.num_threads() is not None:
-            self.visitNum_threads_clause(ctx.num_threads())
+        if ctx.num_threads() != []:
+            self.visitNum_threads_clause(ctx.num_threads(0))
         else:
             # could also add environment variable support in future
             self.printer.println('_num_threads_ = {}'.format(os.cpu_count()))
@@ -44,22 +44,45 @@ class Translator(GrammarVisitor):
         self.incrementing_target_id += 1
         self.printer.println('def {}(_manager_):'.format(target_name))
 
-        if ctx.reduction() is not None:
+        reductions = []
+        if ctx.reduction() != []:
+            for item in ctx.reduction():
+                self.printer.indent()
+                reductions.append(self.visitReduction(item))
+                self.printer.dedent()
+        print(reductions[0])
 
+        if ctx.shared() != []:
+            for item in ctx.shared():
+                self.printer.indent()
+                self.visitShared(item)
+                self.printer.dedent()
 
-        if ctx.shared() is not None:
-            self.printer.indent()
-            self.visitShared(ctx.shared())
-            self.printer.dedent()
-        if ctx.private_() is not None:
-            self.printer.indent()
-            self.visitPrivate_(ctx.private_())
-            self.printer.dedent()
+        if ctx.private_()  != []:
+            for item in ctx.private_():
+                self.printer.indent()
+                self.visitPrivate_(item)
+                self.printer.dedent()
 
         self.visitSuite(ctx.suite())
-        #self.printer.println('_comm_q_ = Queue()')
+        if reductions:
+            self.printer.indent()
+            for group in reductions:
+                # self.printer.println('{} = _manager_.get_reduction_value(\'{}\')'.format(var, var))
+                for key in group.keys():
+                    for var in group[key]:
+                        self.printer.println('_manager_.update_reduction_variable(\'{}\', {}, \'{}\')'.format(var, var, key))
+            self.printer.dedent()
+
         self.printer.println('_manager_ = RuntimeManager(_num_threads_)')
         self.printer.println('submit({}, _num_threads_, args=(_manager_,))'.format(target_name))
+
+        if reductions:
+            for group in reductions:
+                #self.printer.println('{} = _manager_.get_reduction_value(\'{}\')'.format(var, var))
+                for key in group.keys():
+                    for var in group[key]:
+                        self.printer.println('{} = _manager_.get_reduction_value(\'{}\')'.format(var, var))
 
     # Visit a parse tree produced by GrammarParser#parallel_for_directive.
     def visitParallel_for_directive(self, ctx: GrammarParser.Parallel_for_directiveContext):
@@ -169,6 +192,19 @@ class Translator(GrammarVisitor):
             self.printer.dedent()
             # return args
 
+    # Visit a parse tree produced by GrammarParser#reduction.
+    def visitReduction(self, ctx:GrammarParser.ReductionContext):
+        operator = ctx.getChild(1).getSymbol().text
+
+        for name in ctx.NAME():
+            self.printer.println('{} = 0'.format(name))
+            #self.printer.println('_manager_.reduce({}, {})'.format(operator, name))
+        #return ctx.NAME()
+        reduce = {operator: []}
+        for name in ctx.NAME():
+            reduce[operator].append(name.getSymbol().text)
+        return reduce
+
     # Visit a parse tree produced by GrammarParser#schedule.
     def visitSchedule(self, ctx: GrammarParser.ScheduleContext):
         schedule = ctx.SCHEDULE().getSymbol().text
@@ -195,6 +231,7 @@ class Translator(GrammarVisitor):
     def visitPrivate_(self, ctx: GrammarParser.Private_Context):
         count = ctx.getChildCount()
         if count == 1:
+            print('count is one')
             self.printer.println('{} = 0'.format(ctx.NAME().getSymbol().text))
         else:
             for name in ctx.NAME():
@@ -531,7 +568,7 @@ class Translator(GrammarVisitor):
         elif count == 2:
             return 'raise ' + self.visit(ctx.getChild(1))
         else:
-            return 'raise ' + self.visit(ctx.getChild(1)) + ' from ' + self.visit(ctx.getchild(3))
+            return 'raise ' + self.visit(ctx.getChild(1)) + ' from ' + self.visit(ctx.getChild(3))
 
     # Visit a parse tree produced by GrammarParser#import_stmt.
     def visitImport_stmt(self, ctx: GrammarParser.Import_stmtContext):

@@ -4,6 +4,7 @@ from math import floor
 #from jarray import array
 from collections import deque
 from time import sleep
+from operator import xor
 
 
 class RuntimeManager:
@@ -14,6 +15,8 @@ class RuntimeManager:
         self.barrier_count = 0
         self.barrier_done = False
         self.critical_lock = Lock()
+        self.reduction_lock = Lock()
+        self.reductions = {}
 
     def set_for(self, for_manager):
         self.for_manager = for_manager
@@ -34,6 +37,73 @@ class RuntimeManager:
         self.barrier_lock.release()
         while not self.barrier_done:
             continue
+
+    def update_reduction_variable(self, name, val, op):
+        self.reduction_lock.acquire()
+        if name in self.reductions:
+            self.reductions[name].append(val)
+        else:
+            self.reductions[name] = [op, val]
+        self.reduction_lock.release()
+
+
+    def get_reduction_value(self, name):
+        op = self.reductions[name][0]
+        if op == '+' or op == '-':
+            result = 0
+            for i in range(len(self.reductions[name]) - 1):
+                result += self.reductions[name][i + 1]
+            return result
+
+        if op == '*':
+            result = 1
+            for i in range(len(self.reductions[name]) - 1):
+                result *= self.reductions[name][i + 1]
+            return result
+
+        elif op == '&&':
+            result = bool(self.reductions[name][1] and self.reductions[name][2])
+            for i in range(len(self.reductions[name]) - 3):
+                result = bool(result and self.reductions[name][i + 3])
+            return result
+
+        elif op == '||':
+            result = bool(self.reductions[name][1] or self.reductions[name][2])
+            for i in range(len(self.reductions[name]) - 3):
+                result = bool(result or self.reductions[name][i + 3])
+            return result
+
+        elif op == '&':
+            print '&: '
+            result = self.reductions[name][1] & self.reductions[name][2]
+            print bin(self.reductions[name][1]), '\n', bin(self.reductions[name][2])
+            for i in range(len(self.reductions[name]) - 3):
+                print bin(self.reductions[name][i + 3])
+                result = result & self.reductions[name][i + 3]
+            return result
+
+        elif op == '|':
+            result = self.reductions[name][1] | self.reductions[name][2]
+            print bin(self.reductions[name][1]), '\n', bin(self.reductions[name][2])
+            for i in range(len(self.reductions[name]) - 3):
+                print bin(self.reductions[name][i + 3])
+                result = result | self.reductions[name][i + 3]
+            return result
+
+        elif op == '^':
+            result = xor(self.reductions[name][1], self.reductions[name][2])
+            print bin(self.reductions[name][1]), '\n', bin(self.reductions[name][2])
+            for i in range(len(self.reductions[name]) - 3):
+                print bin(self.reductions[name][i + 3])
+                result = xor(result, self.reductions[name][i + 3])
+            return result
+
+        elif op == 'max':
+            return max(self.reductions[name][1:])
+
+        elif op == 'min':
+            return min(self.reductions[name][1:])
+
 
 def get_num_threads():
     try:
