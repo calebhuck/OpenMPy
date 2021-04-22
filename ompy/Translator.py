@@ -35,6 +35,8 @@ class Translator(GrammarVisitor):
     # Visit a parse tree produced by GrammarParser#parallel_directive.
     def visitParallel_directive(self, ctx: GrammarParser.Parallel_directiveContext):
         if ctx.num_threads() != []:
+            if len(ctx.num_threads()) != 1:
+                raise Exception('parallel for directive can only have one num_threads() clause')
             self.visitNum_threads_clause(ctx.num_threads(0))
         else:
             # could also add environment variable support in future
@@ -86,15 +88,19 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#parallel_for_directive.
     def visitParallel_for_directive(self, ctx: GrammarParser.Parallel_for_directiveContext):
-        if ctx.num_threads() is not None:
-            self.visitNum_threads_clause(ctx.num_threads())
+        if ctx.num_threads() != []:
+            if len(ctx.num_threads()) > 1:
+                raise Exception('parallel for directive can only have one num_threads() clause')
+            self.visitNum_threads_clause(ctx.num_threads(0))
         else:
             # could also add environment variable support in future
             self.printer.println('_num_threads_ = {}'.format(os.cpu_count()))
 
         schedule, chunk, args = None, None, []
-        if ctx.schedule() is not None:
-            schedule, chunk = self.visitSchedule(ctx.schedule())
+        if ctx.schedule() != []:
+            if len(ctx.schedule()) != 1:
+                raise Exception('parallel for directive can only have one schedule() clause')
+            schedule, chunk = self.visitSchedule(ctx.schedule(0))
         if schedule is not None:
             self.printer.println('_schedule_ = \'{}\''.format(schedule))
         else:
@@ -108,17 +114,49 @@ class Translator(GrammarVisitor):
         self.printer.println('def {}(_manager_):'.format(target_name))
         self.printer.indent()
 
-        if ctx.shared() is not None:
-            self.visitShared(ctx.shared())
-        if ctx.private_() is not None:
-            self.visitPrivate_(ctx.private_())
+        reductions = []
+        if ctx.reduction() != []:
+            for item in ctx.reduction():
+                #self.printer.indent()
+                reductions.append(self.visitReduction(item))
+                #self.printer.dedent()
+        print(reductions[0])
+
+        if ctx.shared() != []:
+            for item in ctx.shared():
+                self.printer.indent()
+                self.visitShared(item)
+                self.printer.dedent()
+
+        if ctx.private_()  != []:
+            for item in ctx.private_():
+                self.printer.indent()
+                self.visitPrivate_(item)
+                self.printer.dedent()
 
         self.visitFor_suite(ctx.for_suite())
+
+        if reductions:
+            self.printer.indent()
+            for group in reductions:
+                # self.printer.println('{} = _manager_.get_reduction_value(\'{}\')'.format(var, var))
+                for key in group.keys():
+                    for var in group[key]:
+                        self.printer.println('_manager_.update_reduction_variable(\'{}\', {}, \'{}\')'.format(var, var, key))
+            self.printer.dedent()
+
         #self.printer.println('_comm_q_ = Queue()')
         self.printer.println('_for_manager_ = ForManager(_schedule_, _chunk_, _num_threads_)')
         self.printer.println('_manager_ = RuntimeManager(_num_threads_)')
         self.printer.println('_manager_.set_for(_for_manager_)')
         self.printer.println('submit({}, _num_threads_, args=(_manager_,))'.format(target_name))
+
+        if reductions:
+            for group in reductions:
+                #self.printer.println('{} = _manager_.get_reduction_value(\'{}\')'.format(var, var))
+                for key in group.keys():
+                    for var in group[key]:
+                        self.printer.println('{} = _manager_.get_reduction_value(\'{}\')'.format(var, var))
 
     # Visit a parse tree produced by GrammarParser#for_directive.
     def visitFor_directive(self, ctx: GrammarParser.For_directiveContext):
