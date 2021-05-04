@@ -10,6 +10,7 @@ class Translator(GrammarVisitor):
     def __init__(self, printer):
         self.printer = printer
         self.incrementing_target_id = 0
+        self.nesting_level = 0
 
     # Visit a parse tree produced by GrammarParser#file_input.
     def visitFile_input(self, ctx: GrammarParser.File_inputContext):
@@ -29,11 +30,12 @@ class Translator(GrammarVisitor):
         self.printer.println('from queue import Queue')
         self.printer.dedent()
         self.printer.println('from threading import current_thread\n\n')
-        # self.printer.println('num_threads = 1')
+        self.printer.println('_num_threads_ = 1')
         self.visitChildren(ctx)
 
     # Visit a parse tree produced by GrammarParser#parallel_directive.
     def visitParallel_directive(self, ctx: GrammarParser.Parallel_directiveContext):
+        self.nesting_level += 1
         if ctx.num_threads() != []:
             if len(ctx.num_threads()) != 1:
                 raise Exception('parallel for directive can only have one num_threads() clause')
@@ -43,6 +45,7 @@ class Translator(GrammarVisitor):
             self.printer.println('_num_threads_ = {}'.format(os.cpu_count()))
 
         target_name = '_target_' + str(self.incrementing_target_id)
+        #manager_name = '_manager_{}_'.format(self.incrementing_target_id)
         self.incrementing_target_id += 1
         self.printer.println('def {}(_manager_):'.format(target_name))
 
@@ -52,7 +55,6 @@ class Translator(GrammarVisitor):
                 self.printer.indent()
                 reductions.append(self.visitReduction(item))
                 self.printer.dedent()
-        print(reductions[0])
 
         if ctx.shared() != []:
             for item in ctx.shared():
@@ -76,15 +78,16 @@ class Translator(GrammarVisitor):
                         self.printer.println('_manager_.update_reduction_variable(\'{}\', {}, \'{}\')'.format(var, var, key))
             self.printer.dedent()
 
-        self.printer.println('_manager_ = RuntimeManager(_num_threads_)')
-        self.printer.println('submit({}, _num_threads_, args=(_manager_,))'.format(target_name))
+        self.printer.println('_manager_outer_ = RuntimeManager(_num_threads_)')#.format(self.nesting_level))
+        self.printer.println('submit({}, _num_threads_, args=(_manager_outer_,))'.format(target_name))
 
         if reductions:
             for group in reductions:
                 #self.printer.println('{} = _manager_.get_reduction_value(\'{}\')'.format(var, var))
                 for key in group.keys():
                     for var in group[key]:
-                        self.printer.println('{} = _manager_.get_reduction_value(\'{}\')'.format(var, var))
+                        self.printer.println('{} = _manager_outer_.get_reduction_value(\'{}\')'.format(var, var))
+        self.nesting_level -= 1
 
     # Visit a parse tree produced by GrammarParser#parallel_for_directive.
     def visitParallel_for_directive(self, ctx: GrammarParser.Parallel_for_directiveContext):

@@ -181,7 +181,7 @@ sections_suite: NEWLINE INDENT section_directive DEDENT ;
 
 
 
-simple_stmt: small_stmt (';' small_stmt)* (';')? NEWLINE;
+simple_stmt: small_stmt (';' small_stmt)* (';')? (comment | NEWLINE);
 compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt;
 single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE;
 eval_input: testlist NEWLINE* EOF;
