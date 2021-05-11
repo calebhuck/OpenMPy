@@ -2,7 +2,6 @@ from ompy.antlr_generated.GrammarVisitor import *
 from ompy.antlr_generated.GrammarParser import *
 from antlr4 import TerminalNode
 import os
-import re
 
 
 class Translator(GrammarVisitor):
@@ -10,32 +9,30 @@ class Translator(GrammarVisitor):
     def __init__(self, printer):
         self.printer = printer
         self.incrementing_target_id = 0
-        self.nesting_level = 0
+        #self.nesting_level = 0
 
     # Visit a parse tree produced by GrammarParser#file_input.
     def visitFile_input(self, ctx: GrammarParser.File_inputContext):
         self.printer.println('import sys')
         self.printer.println('sys.path.append(\'C:\\\\Users\\Caleb\\\\PycharmProjects\\\\OpenMPy\\\\ompy\')')
         self.printer.println('import jarray')
-        self.printer.println('from omp_functions import *')
+        self.printer.println('from omp import *')
         self.printer.println('from runtime import *')
-        # self.printer.println('from ompy.omp_functions import *')
-        # self.printer.println('from ompy.runtime import *')
-        self.printer.println('try:')
-        self.printer.indent()
+        #self.printer.println('try:')
+        #self.printer.indent()
         self.printer.println('from Queue import Queue')
-        self.printer.dedent()
-        self.printer.println('except ModuleNotFoundError:')
-        self.printer.indent()
-        self.printer.println('from queue import Queue')
-        self.printer.dedent()
+        #self.printer.dedent()
+        #self.printer.println('except ModuleNotFoundError:')
+        #self.printer.indent()
+        #self.printer.println('from queue import Queue')
+        #self.printer.dedent()
         self.printer.println('from threading import current_thread\n\n')
         self.printer.println('_num_threads_ = 1')
         self.visitChildren(ctx)
 
     # Visit a parse tree produced by GrammarParser#parallel_directive.
     def visitParallel_directive(self, ctx: GrammarParser.Parallel_directiveContext):
-        self.nesting_level += 1
+        #self.nesting_level += 1
         if ctx.num_threads() != []:
             if len(ctx.num_threads()) != 1:
                 raise Exception('parallel for directive can only have one num_threads() clause')
@@ -87,7 +84,7 @@ class Translator(GrammarVisitor):
                 for key in group.keys():
                     for var in group[key]:
                         self.printer.println('{} = _manager_outer_.get_reduction_value(\'{}\')'.format(var, var))
-        self.nesting_level -= 1
+        #self.nesting_level -= 1
 
     # Visit a parse tree produced by GrammarParser#parallel_for_directive.
     def visitParallel_for_directive(self, ctx: GrammarParser.Parallel_for_directiveContext):
@@ -123,7 +120,6 @@ class Translator(GrammarVisitor):
                 #self.printer.indent()
                 reductions.append(self.visitReduction(item))
                 #self.printer.dedent()
-        print(reductions[0])
 
         if ctx.shared() != []:
             for item in ctx.shared():
@@ -321,7 +317,6 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#num_threads_clause.
     def visitNum_threads_clause(self, ctx: GrammarParser.Num_threadsContext):
-
         self.printer.println('_num_threads_ = {}'.format(self.visit(ctx.argument())))
         '''num = ctx.NUMBER().getSymbol().text
         try:
@@ -333,7 +328,7 @@ class Translator(GrammarVisitor):
             print('Error in num_threads clause at line {}... {} is not valid'.format(lineno, num))'''
 
     # Visit a parse tree produced by GrammarParser#comment.
-    def visitComment(self, ctx: GrammarParser.CommentContext):
+    '''def visitComment(self, ctx: GrammarParser.CommentContext):
         return
         str = ''
         for i in range(ctx.getChildCount()):
@@ -341,7 +336,7 @@ class Translator(GrammarVisitor):
         if re.search('^#.*(\r?\n | \f).+(\r?\n | \f)\s*$', str):
             print('illegal comment at line {}'.format(ctx.getChild(0).getSymbol().line))
         self.printer.print(str)
-        self.printer.newline()
+        self.printer.newline()'''
 
     # Visit a parse tree produced by GrammarParser#for_stmt.
     def visitFor_stmt(self, ctx: GrammarParser.For_stmtContext):

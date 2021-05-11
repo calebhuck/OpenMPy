@@ -1,6 +1,7 @@
 import sys
 import jarray
 from time import time
+from ompy.omp import *
 
 
 def zero_out_array(arr):
