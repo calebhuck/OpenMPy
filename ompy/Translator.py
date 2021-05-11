@@ -318,25 +318,6 @@ class Translator(GrammarVisitor):
     # Visit a parse tree produced by GrammarParser#num_threads_clause.
     def visitNum_threads_clause(self, ctx: GrammarParser.Num_threadsContext):
         self.printer.println('_num_threads_ = {}'.format(self.visit(ctx.argument())))
-        '''num = ctx.NUMBER().getSymbol().text
-        try:
-            num = int(num)
-            return num
-        except Exception as e:
-            lineno = ctx.start.line
-            # CHANGE THIS IN FUTURE WHEN WORKING ON ERROR HANDLING
-            print('Error in num_threads clause at line {}... {} is not valid'.format(lineno, num))'''
-
-    # Visit a parse tree produced by GrammarParser#comment.
-    '''def visitComment(self, ctx: GrammarParser.CommentContext):
-        return
-        str = ''
-        for i in range(ctx.getChildCount()):
-            str += ctx.getChild(i).getSymbol().text + ' '
-        if re.search('^#.*(\r?\n | \f).+(\r?\n | \f)\s*$', str):
-            print('illegal comment at line {}'.format(ctx.getChild(0).getSymbol().line))
-        self.printer.print(str)
-        self.printer.newline()'''
 
     # Visit a parse tree produced by GrammarParser#for_stmt.
     def visitFor_stmt(self, ctx: GrammarParser.For_stmtContext):
