@@ -15,8 +15,8 @@ class Translator(GrammarVisitor):
     def visitFile_input(self, ctx: GrammarParser.File_inputContext):
         self.printer.println('import sys')
         #self.printer.println('sys.path.append(\'C:\\\\Users\\Caleb\\\\PycharmProjects\\\\OpenMPy\\\\ompy\')')
-        #self.printer.println('sys.path.append(\'/Users/calebhuck/PycharmProjects/OpenMPy/ompy/\')')
-        self.printer.println('sys.path.append(\'/home/pi/PycharmProjects/OpenMPy/ompy\')')
+        self.printer.println('sys.path.append(\'/Users/calebhuck/PycharmProjects/OpenMPy/ompy/\')')
+        #self.printer.println('sys.path.append(\'/home/pi/PycharmProjects/OpenMPy/ompy\')')
 
         self.printer.println('import jarray')
         self.printer.println('from omp import *')
@@ -295,11 +295,13 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#master_directive.
     def visitMaster_directive(self, ctx: GrammarParser.Master_directiveContext):
-        return self.visitChildren(ctx)
+        self.printer.println('if get_current_thread_id() == 0:')
+        self.visitSuite(ctx.suite())
 
     # Visit a parse tree produced by GrammarParser#single_directive.
     def visitSingle_directive(self, ctx: GrammarParser.Single_directiveContext):
-        return self.visitChildren(ctx)
+        self.printer.println('if get_current_thread_id() == 0:')
+        self.visitSuite(ctx.suite())
 
     # Visit a parse tree produced by GrammarParser#critical_directive.
     def visitCritical_directive(self, ctx: GrammarParser.Critical_directiveContext):
@@ -316,7 +318,19 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#atomic_directive.
     def visitAtomic_directive(self, ctx: GrammarParser.Atomic_directiveContext):
-        return self.visitChildren(ctx)
+        self.printer.println('if get_num_threads() > 1:')
+        self.printer.indent()
+        self.printer.println('_manager_.atomic_lock.acquire()')
+        str = ctx.NAME().getSymbol().text + ' '
+        '''if ctx.getChildCount() == 7:
+            self.printer.print(ctx.getChild(3).getSymbol().text)
+            self.printer.print(ctx.getChild(4).getSymbol().text + ' ')
+        else:'''
+        str += ctx.getChild(3).getSymbol().text + ' '
+        str += self.visitExpr(ctx.expr())
+        self.printer.println(str)
+        self.printer.println('_manager_.atomic_lock.release()')
+        self.printer.dedent()
 
     # Visit a parse tree produced by GrammarParser#num_threads_clause.
     def visitNum_threads_clause(self, ctx: GrammarParser.Num_threadsContext):

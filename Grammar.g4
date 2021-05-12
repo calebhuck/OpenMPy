@@ -145,6 +145,8 @@ omp_directive: parallel_directive
              | barrier_directive
              | atomic_directive
              | critical_directive
+             | master_directive
+             | single_directive
              ;
 // OpenMP Directives
 parallel_directive: 'parallel' (num_threads | shared | private_ | reduction)* suite ;
@@ -157,7 +159,7 @@ master_directive: 'master' suite;
 single_directive: 'single' suite;
 critical_directive: 'critical' suite;
 barrier_directive: 'barrier' NEWLINE;
-atomic_directive: 'atomic' simple_stmt; // separate from critical?
+atomic_directive: 'atomic' NEWLINE NAME ('+=' | '*=' | '/=' | '-=' | '=') expr NEWLINE; // separate from critical?
 
 // OpenMP Clauses
 num_threads: 'num_threads(' argument ')' ;
@@ -165,11 +167,11 @@ shared: 'shared(' NAME (',' NAME)* ')' ;
 private_: 'private(' NAME (',' NAME)* ')' ;
 first_private: 'firstprivate(' NAME ')' ;
 last_private: 'lastprivate(' NAME ')' ;
-default: 'default(' ('shared' | 'private' | 'firstprivate' | 'none') ')' ;
-copin: 'copin(' NAME ')' ;
+//default: 'default(' ('shared' | 'private' | 'firstprivate' | 'none') ')' ;
+//copyin: 'copin(' NAME ')' ;
 reduction: 'reduction(' ('+' | '-' | '*' | 'min' | 'max' | '&' | '&&' | '|' | '||' | '^') ':' NAME (',' NAME)* ')' ;
 schedule: 'schedule(' SCHEDULE (',' NUMBER)? ')' ;
-nowait: 'nowait' ;
+//nowait: 'nowait' ;
 
 for_suite: NEWLINE INDENT 'for' NAME 'in' NAME '('argument (',' argument)? (',' argument)? ')' ':' suite DEDENT ;
 sections_suite: NEWLINE INDENT section_directive DEDENT ;

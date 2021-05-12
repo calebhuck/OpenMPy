@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     n_range = range(100, 510, 10)
 
-    with open('data.csv', 'wb') as file:
+    with open('benchmark_results/data.csv', 'wb') as file:
         writer = csv.writer(file, delimiter=',')
         writer.writerow(list(n_range))
 
@@ -84,6 +84,6 @@ if __name__ == '__main__':
             else:
                 row.append(parallel_time)
             print('finished: ', num_threads, ' threads ', ' and n = ', n)
-        with open('data.csv', 'ab') as file:
+        with open('benchmark_results/data.csv', 'ab') as file:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(row)

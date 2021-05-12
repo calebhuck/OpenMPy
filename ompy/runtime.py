@@ -15,6 +15,7 @@ class RuntimeManager:
         self.barrier_count = 0
         self.barrier_done = False
         self.critical_lock = Lock()
+        self.atomic_lock = Lock()
         self.reduction_lock = Lock()
         self.reductions = {}
 
