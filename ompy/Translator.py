@@ -14,7 +14,9 @@ class Translator(GrammarVisitor):
     # Visit a parse tree produced by GrammarParser#file_input.
     def visitFile_input(self, ctx: GrammarParser.File_inputContext):
         self.printer.println('import sys')
-        self.printer.println('sys.path.append(\'C:\\\\Users\\Caleb\\\\PycharmProjects\\\\OpenMPy\\\\ompy\')')
+        #self.printer.println('sys.path.append(\'C:\\\\Users\\Caleb\\\\PycharmProjects\\\\OpenMPy\\\\ompy\')')
+        self.printer.println('sys.path.append(\'/Users/calebhuck/PycharmProjects/OpenMPy/ompy/\')')
+
         self.printer.println('import jarray')
         self.printer.println('from omp import *')
         self.printer.println('from runtime import *')

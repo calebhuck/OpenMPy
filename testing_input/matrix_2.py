@@ -30,7 +30,7 @@ def matrix_mult(arr_1, arr_2, result_arr, start, end):
 
 if __name__ == '__main__':
 
-    n_range = range(100, 1010, 50)
+    n_range = range(100, 510, 10)
 
     with open('data.csv', 'wb') as file:
         writer = csv.writer(file, delimiter=',')
