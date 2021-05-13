@@ -1,9 +1,11 @@
 from time import sleep
 
-#pragma omp parallel num_threads(2)
+#omp parallel num_threads(2)
     if omp_get_thread_num() == 0:
-        sleep(2)
-    #pragma omp barrier
-    print('thread: ', omp_get_thread_num())
+        sleep(3)
+    else:
+        print('thread: ', omp_get_thread_num(), ' waiting at barrier...')
+    #omp barrier
+    #omp critical
+        print('thread: ', omp_get_thread_num(), ' made it through barrier')
 
-print('thread: ', omp_get_thread_num())

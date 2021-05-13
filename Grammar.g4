@@ -397,15 +397,13 @@ except ValueError:          # End of file
 try:
     nextnext_la = self._input.LA(2)
     nextnext_la_char = chr(nextnext_la)
-    la_o = nextnext_la
-    la_m = chr(self._input.LA(3))
-    la_p = chr(self._input.LA(4))
+    la_o = nextnext_la_char
 except ValueError:
     nextnext_eof = True
 else:
     nextnext_eof = False
 if self.opened > 0 or nextnext_eof is False and (la_char == '\r' or la_char == '\n' or la_char == '\f' or \
-(la_char == '#' and (la_o != 'o' and la_m != 'm' and la_p != 'p'))):
+(la_char == '#' and (la_o != 'o' and chr(self._input.LA(3)) != 'm' and chr(self._input.LA(4)) != 'p'))):
     self.skip()
 else:
     indent = self.getIndentationCount(spaces)

@@ -3,20 +3,7 @@ import jarray
 from time import time
 from ompy.omp import *
 import csv
-
-
-def zero_out_array(arr):
-    for i in range(len(arr)):
-        arr[i] = 0.0
-
-
-def print_array(arr, n, label):
-    print(label + ':')
-    for i in range(n):
-        for j in range(n):
-            print(arr[i * n + j])
-        print('')
-    print('')
+from datetime import datetime
 
 
 def matrix_mult(arr_1, arr_2, result_arr, start, end):
@@ -30,13 +17,21 @@ def matrix_mult(arr_1, arr_2, result_arr, start, end):
 
 if __name__ == '__main__':
 
-    n_range = range(100, 510, 10)
+    n_range = range(15, 150, 1)
+    thread_list = [1, 2, 4]
+    result_dir = 'benchmark_results/'
+    file_name = result_dir + datetime.now().strftime("%Y_%m_%d-%I_%M") + '__mac__matrix_mult__.csv'
 
-    with open('benchmark_results/data.csv', 'wb') as file:
+    n_vals_row = list(n_range)[:]
+    n_vals_row.insert(0, None)
+
+    with open(file_name, 'wb') as file:
         writer = csv.writer(file, delimiter=',')
-        writer.writerow(list(n_range))
+        writer.writerow(n_vals_row)
 
-    for num_threads in [1, 2, 4, 8, 12, 24]:
+    _runtime = []
+
+    for num_threads in thread_list:
         row = []
         row.append(num_threads)
         for n in n_range:
@@ -84,6 +79,34 @@ if __name__ == '__main__':
             else:
                 row.append(parallel_time)
             print('finished: ', num_threads, ' threads ', ' and n = ', n)
-        with open('benchmark_results/data.csv', 'ab') as file:
+        _runtime.append(row)
+        with open(file_name, 'ab') as file:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(row)
+
+    speedup_row = []
+    with open(file_name, 'ab') as file:
+        writer = csv.writer(file, delimiter=',')
+        writer.writerow([])
+        writer.writerow(n_vals_row)
+        for i, val in enumerate(thread_list):
+            if val == 1:
+                continue
+            speedup_row.append(val)
+            for x in range(1, len(n_range) + 1):
+                speedup_row.append(_runtime[0][x] / _runtime[i][x])
+            writer.writerow(speedup_row)
+            speedup_row = []
+
+        #efficiency
+        efficiency_row = []
+        writer.writerow([])
+        writer.writerow(n_vals_row)
+        for i, val in enumerate(thread_list):
+            if val == 1:
+                continue
+            efficiency_row.append(val)
+            for x in range(1, len(n_range) + 1):
+                efficiency_row.append(_runtime[0][x] / (_runtime[i][x] * val))
+            writer.writerow(efficiency_row)
+            efficiency_row = []

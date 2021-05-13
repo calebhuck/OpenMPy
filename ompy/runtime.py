@@ -75,27 +75,27 @@ class RuntimeManager:
             return result
 
         elif op == '&':
-            print '&: '
+            #print '&: '
             result = self.reductions[name][1] & self.reductions[name][2]
-            print bin(self.reductions[name][1]), '\n', bin(self.reductions[name][2])
+            #print bin(self.reductions[name][1]), '\n', bin(self.reductions[name][2])
             for i in range(len(self.reductions[name]) - 3):
-                print bin(self.reductions[name][i + 3])
+                #print bin(self.reductions[name][i + 3])
                 result = result & self.reductions[name][i + 3]
             return result
 
         elif op == '|':
             result = self.reductions[name][1] | self.reductions[name][2]
-            print bin(self.reductions[name][1]), '\n', bin(self.reductions[name][2])
+            #print bin(self.reductions[name][1]), '\n', bin(self.reductions[name][2])
             for i in range(len(self.reductions[name]) - 3):
-                print bin(self.reductions[name][i + 3])
+                #print bin(self.reductions[name][i + 3])
                 result = result | self.reductions[name][i + 3]
             return result
 
         elif op == '^':
             result = xor(self.reductions[name][1], self.reductions[name][2])
-            print bin(self.reductions[name][1]), '\n', bin(self.reductions[name][2])
+            #print bin(self.reductions[name][1]), '\n', bin(self.reductions[name][2])
             for i in range(len(self.reductions[name]) - 3):
-                print bin(self.reductions[name][i + 3])
+                #print bin(self.reductions[name][i + 3])
                 result = xor(result, self.reductions[name][i + 3])
             return result
 

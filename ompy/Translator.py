@@ -126,15 +126,15 @@ class Translator(GrammarVisitor):
 
         if ctx.shared() != []:
             for item in ctx.shared():
-                self.printer.indent()
+                #self.printer.indent()
                 self.visitShared(item)
-                self.printer.dedent()
+                #self.printer.dedent()
 
         if ctx.private_()  != []:
             for item in ctx.private_():
-                self.printer.indent()
+                #self.printer.indent()
                 self.visitPrivate_(item)
-                self.printer.dedent()
+                #self.printer.dedent()
 
         self.visitFor_suite(ctx.for_suite())
 
@@ -1060,15 +1060,41 @@ class Translator(GrammarVisitor):
 
     # Visit a parse tree produced by GrammarParser#subscriptlist.
     def visitSubscriptlist(self, ctx: GrammarParser.SubscriptlistContext):
-        return self.visitChildren(ctx)
+        count = ctx.getChildCount()
+        if count == 1:
+            return self.visitSubscript(ctx.subscript(0))
+        else:
+            str = ''
+            for sub in ctx.subscript():
+                str += ', ' + self.visitSubscript(sub)
+            if isinstance(ctx.getChild(count - 1), TerminalNode):
+                str += ','
+            return str
+
 
     # Visit a parse tree produced by GrammarParser#subscript.
     def visitSubscript(self, ctx: GrammarParser.SubscriptContext):
-        return self.visitChildren(ctx)
+        count = ctx.getChildCount()
+        if count == 1:
+            if isinstance(ctx.getChild(0), TerminalNode):
+                return ':'
+            else:
+                return self.visitTest(ctx.test(0))
+        else:
+            str = ''
+            for i in range(count):
+                if isinstance(ctx.getChild(i), TerminalNode):
+                    str += ':'
+                else:
+                    str += self.visit(ctx.getChild(i))
+            return str
 
     # Visit a parse tree produced by GrammarParser#sliceop.
     def visitSliceop(self, ctx: GrammarParser.SliceopContext):
-        return self.visitChildren(ctx)
+        if ctx.getChildCount() == 1:
+            return ':'
+        else:
+            return ':' + self.visit(ctx.getChild(1))
 
     # Visit a parse tree produced by GrammarParser#testlist.
     def visitTestlist(self, ctx: GrammarParser.TestlistContext):
