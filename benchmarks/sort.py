@@ -6,10 +6,39 @@ import csv
 from datetime import datetime
 from random import randint
 
+
+
+def b_sort(arr):
+    n_ = len(arr)
+    for i in range(n_):
+        for j in range(n_ - 1, i, -1):
+            if arr[j - 1] > arr[j]:
+                arr[j - 1], arr[j] = arr[j], arr[j - 1]
+
+def merge(arr1, arr2):
+    size1, size2 = len(arr1), len(arr2)
+    idx_arr1, idx_arr2 = 0, 0
+    result = jarray.array([], int)
+
+    while idx_arr1 != size1 or idx_arr2 != size2:
+        while idx_arr1 != size1 and (idx_arr2 == size2 or arr1[idx_arr1] <= arr2[idx_arr2]):
+            result.append(arr1[idx_arr1])
+            idx_arr1 += 1
+        while idx_arr2 != size2 and (idx_arr1 == size1 or arr2[idx_arr2] <= arr1[idx_arr1]):
+            result.append(arr2[idx_arr2])
+            idx_arr2+=1
+    return result
+
+
+
+
+
+
 if __name__ == '__main__':
 
-    n_range = range(5, 700, 2)
-    thread_list = [1]
+    num_runs = 100
+    n_range = range(100, 1000, 5)
+    thread_list = [1, 2, 4, 8]
     result_dir = 'benchmark_results/'
     file_name = result_dir + datetime.now().strftime("%Y_%m_%d-%I_%M") + '__mac__sort__.csv'
 
@@ -26,64 +55,74 @@ if __name__ == '__main__':
         row = []
         row.append(num_threads)
         for n in n_range:
+            run_results = []
+            for run in range(num_runs):
 
-            arr_1 = jarray.array([], int)
-            arr_2 = jarray.array([], int)
+                arr_1 = jarray.array([], int)
+                arr_2 = jarray.array([], int)
 
-            for i in range(n):
-                arr_1.append(randint(0, 10000))
-            arr_2 = arr_1[:]
-
-            if True: #num_threads == 1:
-                s_start = time()
                 for i in range(n):
-                    swapped = False
-                    for j in range(0, n - i - 1):
-                        if arr_1[j] > arr_1[j + 1]:
-                            arr_1[j], arr_1[j + 1] = arr_1[j + 1], arr_1[j]
-                            swapped = True
-                    if not swapped:
-                        break
+                    arr_1.append(randint(0, 10000))
+                arr_2 = arr_1[:]
 
-                s_end = time()
-                serial_time = s_end - s_start
-            else:
-                serial_time = 9999999999
+                if num_threads == 1:
+                    s_start = time()
+                    for i in range(n):
+                        swapped = False
+                        for j in range(0, n - i - 1):
+                            if arr_1[j] > arr_1[j + 1]:
+                                arr_1[j], arr_1[j + 1] = arr_1[j + 1], arr_1[j]
+                                swapped = True
+                        if not swapped:
+                            break
 
-            #print('serial: ', serial_time)
-            if True:# num_threads != 1:
-                p_start = time()
+                        s_end = time()
+                        serial_time = s_end - s_start
+                else:
+                    serial_time = 9999999999
 
-                #omp parallel num_threads(num_threads)
-                    #omp for schedule(static)
-                        for x in range(n - 1):
-                            if x % 2 == 0:
-                                for i in range(n//2):
-                                    if arr_2[2*i] > arr_2[2 * i + 1]:
-                                        arr_2[2*i], arr_2[2 * i + 1] = arr_2[2 * i + 1],  arr_2[2*i]
-                            else:
-                                for i in range(n//2 - 1):
-                                    if arr_2[2*i + 1] > arr_2[2 * i + 2]:
-                                        arr_2[2*i + 1], arr_2[2 * i + 2] = arr_2[2 * i + 2],  arr_2[2*i + 1]
-
-                p_end = time()
-                parallel_time = p_end - p_start
-            else:
-                parallel_time = 99999999999
-            #print('parallel: ', parallel_time)
+                #print('serial: ', serial_time)
+                result = jarray.array([], int)
+                if num_threads != 1:
+                    p_start = time()
 
 
-            print(arr_1, '\n\n')
-            print(arr_2, '\n\n\n\n\n\n')
-            if arr_2 != arr_1:
-                raise Exception('results don\'t match!')
+                    sub_arrs = [[] for x in range(num_threads)]
+                    #omp parallel num_threads(num_threads) shared(sub_arrs)
+                        id = omp_get_thread_num()
+                        chunk = int(n/num_threads)
+                        sub_arr = jarray.array(arr_2[id*chunk:id*chunk+chunk], int) if id < num_threads - 1 else jarray.array(arr_2[id*chunk:n], int)
+                        b_sort(sub_arr)
+                        sub_arrs[id] = sub_arr
+                    for x in range(num_threads):
+                        result = merge(result, sub_arrs[x])
 
 
-            if num_threads == 1:
-                row.append(serial_time)
-            else:
-                row.append(parallel_time)
-            print('finished: ', num_threads, ' threads ', ' and n = ', n)
+
+                    p_end = time()
+                    parallel_time = p_end - p_start
+                else:
+                    parallel_time = 99999999999
+                #print('parallel: ', parallel_time)
+
+
+                #print(arr_1, '\n\n')
+                #print(result, '\n\n\n\n\n\n')
+                #print(result == arr_1)
+                #if result != arr_1:
+                #    raise Exception('results don\'t match!')
+                if num_threads == 1:
+                    run_results.append(serial_time)
+                else:
+                    run_results.append(parallel_time)
+
+            avg = 0
+            for result_index in range(num_runs):
+                avg += run_results[result_index]
+            avg = avg / num_runs
+
+            row.append(avg)
+            print('finished: ', num_threads, ' threads ', ' and n = ', n, ' avg = ', avg)
         _runtime.append(row)
         with open(file_name, 'ab') as file:
             writer = csv.writer(file, delimiter=',')
