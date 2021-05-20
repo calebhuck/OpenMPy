@@ -73,7 +73,7 @@ if __name__ == '__main__':
             avg = avg / num_runs
 
             row.append(avg)
-            print('finished: ', num_threads, ' threads ', ' n = ', n, ' avg time = ', avg)
+            print('finished ', benchmark, ': ', num_threads, ' threads ', ' n = ', n, ' avg time = ', avg)
         _runtime.append(row)
 
         with open(file_name, 'ab') as file:

@@ -5,7 +5,7 @@ from ompy.Translator import Translator
 from ompy.source_printer import SourcePrinter
 
 def main():
-    input_stream = FileStream('benchmarks/sum.py')
+    input_stream = FileStream('benchmarks/matrix_multiplication.py')
     lexer = GrammarLexer(input_stream)
     stream = CommonTokenStream(lexer)
     parser = GrammarParser(stream)
