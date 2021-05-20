@@ -1,4 +1,3 @@
-import sys
 import jarray
 from time import time
 from ompy.omp import *
@@ -11,9 +10,13 @@ from random import randint
 def b_sort(arr):
     n_ = len(arr)
     for i in range(n_):
+        swapped = False
         for j in range(n_ - 1, i, -1):
             if arr[j - 1] > arr[j]:
                 arr[j - 1], arr[j] = arr[j], arr[j - 1]
+                swapped = True
+        if not swapped:
+            break
 
 def merge(arr1, arr2):
     size1, size2 = len(arr1), len(arr2)
@@ -29,18 +32,16 @@ def merge(arr1, arr2):
             idx_arr2+=1
     return result
 
-
-
-
-
-
 if __name__ == '__main__':
-
-    num_runs = 100
-    n_range = range(100, 1000, 5)
-    thread_list = [1, 2, 4, 8]
+    debug = False
+    num_runs = 20
+    n_range = range(10, 1000, 10)
+    thread_list = [1, 2, 4, 8, 12]
     result_dir = 'benchmark_results/'
-    file_name = result_dir + datetime.now().strftime("%Y_%m_%d-%I_%M") + '__mac__sort__.csv'
+    platform = 'mac'
+    benchmark = 'bubble_sort'
+    file_name = result_dir + datetime.now().strftime("%Y_%m_%d--%I_%M")
+    file_name += '__' + platform + '__' + benchmark + '__runs_' + str(num_runs) + '__.csv'
 
     n_vals_row = list(n_range)[:]
     n_vals_row.insert(0, None)
@@ -60,12 +61,14 @@ if __name__ == '__main__':
 
                 arr_1 = jarray.array([], int)
                 arr_2 = jarray.array([], int)
+                serial_time = 9999999999999
+                parallel_time = 9999999999999
 
                 for i in range(n):
                     arr_1.append(randint(0, 10000))
                 arr_2 = arr_1[:]
 
-                if num_threads == 1:
+                if debug or num_threads == 1:
                     s_start = time()
                     for i in range(n):
                         swapped = False
@@ -78,12 +81,10 @@ if __name__ == '__main__':
 
                         s_end = time()
                         serial_time = s_end - s_start
-                else:
-                    serial_time = 9999999999
 
-                #print('serial: ', serial_time)
                 result = jarray.array([], int)
-                if num_threads != 1:
+
+                if debug or num_threads > 1:
                     p_start = time()
 
 
@@ -101,16 +102,11 @@ if __name__ == '__main__':
 
                     p_end = time()
                     parallel_time = p_end - p_start
-                else:
-                    parallel_time = 99999999999
-                #print('parallel: ', parallel_time)
 
+                if debug:
+                    if result != arr_1:
+                        raise Exception('results don\'t match!')
 
-                #print(arr_1, '\n\n')
-                #print(result, '\n\n\n\n\n\n')
-                #print(result == arr_1)
-                #if result != arr_1:
-                #    raise Exception('results don\'t match!')
                 if num_threads == 1:
                     run_results.append(serial_time)
                 else:
@@ -122,8 +118,9 @@ if __name__ == '__main__':
             avg = avg / num_runs
 
             row.append(avg)
-            print('finished: ', num_threads, ' threads ', ' and n = ', n, ' avg = ', avg)
+            print('finished: ', num_threads, ' threads ', ' n = ', n, ' avg time = ', avg)
         _runtime.append(row)
+
         with open(file_name, 'ab') as file:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(row)

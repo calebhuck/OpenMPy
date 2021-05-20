@@ -6,11 +6,15 @@ import csv
 from datetime import datetime
 
 if __name__ == '__main__':
-
-    n_range = range(100, 10000000, 500000)
-    thread_list = [1, 2, 4, 8]
+    debug = False
+    num_runs = 20
+    n_range = range(100, 500000, 5000)
+    thread_list = [1, 2, 4, 8, 12]
     result_dir = 'benchmark_results/'
-    file_name = result_dir + datetime.now().strftime("%Y_%m_%d-%I_%M") + '__mac__sum__.csv'
+    platform = 'mac'
+    benchmark = 'sum'
+    file_name = result_dir + datetime.now().strftime("%Y_%m_%d--%I_%M")
+    file_name += '__' + platform + '__' + benchmark + '__runs_' + str(num_runs) + '__.csv'
 
     n_vals_row = list(n_range)[:]
     n_vals_row.insert(0, None)
@@ -25,39 +29,53 @@ if __name__ == '__main__':
         row = []
         row.append(num_threads)
         for n in n_range:
+            run_results = []
+            for run in range(num_runs):
 
-            arr = jarray.array([], int)
+                arr = jarray.array([], int)
 
-            s_sum = 0
-            p_sum = 0
+                s_sum = 0
+                p_sum = 0
+                serial_time = 9999999999999
+                parallel_time = 9999999999999
 
-            for i in range(n):
-                arr.append(1)
+                for i in range(n):
+                    arr.append(1)
 
-            s_start = time()
-            for i in range(n):
-                s_sum += arr[i]
-            s_end = time()
-            serial_time = s_end - s_start
+                if debug or num_threads == 1:
+                    s_start = time()
+                    for i in range(n):
+                        s_sum += arr[i]
+                    s_end = time()
+                    serial_time = s_end - s_start
 
-            p_start = time()
-            #omp parallel num_threads(num_threads) reduction(+:p_sum)
-                #omp for schedule(static)
-                    for x in range(len(arr)):
-                        p_sum += arr[x]
-            p_end = time()
-            parallel_time = p_end - p_start
+                if debug or num_threads > 1:
+                    p_start = time()
+                    #omp parallel num_threads(num_threads) reduction(+:p_sum)
+                        #omp for schedule(static)
+                            for x in range(len(arr)):
+                                p_sum += arr[x]
+                    p_end = time()
+                    parallel_time = p_end - p_start
 
-            if s_sum != p_sum:
-                raise Exception('results don\'t match!')
+                if debug:
+                    if s_sum != p_sum:
+                        raise Exception('results don\'t match!')
 
+                if num_threads == 1:
+                    run_results.append(serial_time)
+                else:
+                    run_results.append(parallel_time)
 
-            if num_threads == 1:
-                row.append(serial_time)
-            else:
-                row.append(parallel_time)
-            print('finished: ', num_threads, ' threads ', ' and n = ', n)
+            avg = 0
+            for result_index in range(num_runs):
+                avg += run_results[result_index]
+            avg = avg / num_runs
+
+            row.append(avg)
+            print('finished: ', num_threads, ' threads ', ' n = ', n, ' avg time = ', avg)
         _runtime.append(row)
+
         with open(file_name, 'ab') as file:
             writer = csv.writer(file, delimiter=',')
             writer.writerow(row)

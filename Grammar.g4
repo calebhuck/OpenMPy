@@ -402,8 +402,30 @@ except ValueError:
     nextnext_eof = True
 else:
     nextnext_eof = False
-if self.opened > 0 or nextnext_eof is False and (la_char == '\r' or la_char == '\n' or la_char == '\f' or \
-(la_char == '#' and (la_o != 'o' and chr(self._input.LA(3)) != 'm' and chr(self._input.LA(4)) != 'p'))):
+'''
+try:
+    la_m = chr(self._input.LA(3))
+    la_p = chr(self._input.LA(4))
+except ValueError:
+    omp_la_failed = True
+else:
+    omp_la_failed = False'''
+
+
+try:
+    la_o = chr(self._input.LA(2))
+    la_m = chr(self._input.LA(3))
+    la_p = chr(self._input.LA(4))
+except ValueError:
+    omp_comment = False
+else:
+    if la_o == 'o' and la_m == 'm' and la_p == 'p':
+        omp_comment = True
+    else:
+        omp_comment = False
+
+
+if self.opened > 0 or nextnext_eof is False and (la_char == '\r' or la_char == '\n' or la_char == '\f' or (la_char == '#' and not omp_comment)): #(omp_la_failed or (la_o != 'o' or la_m != 'm' or la_p != 'p')))):
     self.skip()
 else:
     indent = self.getIndentationCount(spaces)
