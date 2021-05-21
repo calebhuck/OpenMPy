@@ -135,7 +135,10 @@ if __name__ == '__main__':
                 continue
             speedup_row.append(val)
             for x in range(1, len(n_range) + 1):
-                speedup_row.append(_runtime[0][x] / _runtime[i][x])
+                try:
+                    speedup_row.append(_runtime[0][x] / _runtime[i][x])
+                except ZeroDivisionError:
+                    speedup_row.append(0)
             writer.writerow(speedup_row)
             speedup_row = []
 
@@ -148,6 +151,9 @@ if __name__ == '__main__':
                 continue
             efficiency_row.append(val)
             for x in range(1, len(n_range) + 1):
-                efficiency_row.append(_runtime[0][x] / (_runtime[i][x] * val))
+                try:
+                    efficiency_row.append(_runtime[0][x] / (_runtime[i][x] * val))
+                except ZeroDivisionError:
+                    efficiency_row.append(0)
             writer.writerow(efficiency_row)
             efficiency_row = []
