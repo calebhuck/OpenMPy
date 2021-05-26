@@ -17,7 +17,7 @@ def matrix_mult(arr_1, arr_2, result_arr, start, end):
             row_sum = 0
 
 if __name__ == '__main__':
-    debug = False
+    debug = False blah
     num_runs = 20
     n_range = range(10, 505, 10)
     thread_list = [1, 2, 4, 8, 12]

@@ -6,8 +6,9 @@ import csv
 from datetime import datetime
 
 if __name__ == '__main__':
-    debug = False
-    num_runs = 20
+
+    debug = False               # if set to true, serial and omp will both be run and results are compared at the end
+    num_runs = 20               # number of runs for each thread/n combination. average accross runs is stored at the end
     n_range = range(100, 500000, 5000)
     thread_list = [1, 2, 4, 8, 12]
     result_dir = 'benchmark_results/'
