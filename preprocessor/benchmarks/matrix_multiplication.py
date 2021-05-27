@@ -19,7 +19,7 @@ def matrix_mult(arr_1, arr_2, result_arr, start, end):
 if __name__ == '__main__':
     debug = False
     num_runs = 20
-    n_range = range(10, 505, 10)
+    n_range = range(10, 300, 20)
     thread_list = [1, 2, 4, 8, 12]
     result_dir = 'benchmark_results/'
     platform = 'mac'
