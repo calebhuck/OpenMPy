@@ -1,7 +1,7 @@
 import sys
 import jarray
 from time import time
-from ompy.omp import *
+#from ompy.omp import *
 import csv
 from datetime import datetime
 
