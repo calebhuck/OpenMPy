@@ -1,9 +1,9 @@
 import sys
 import jarray
 from time import time
-#from ompy.omp import *
 import csv
 from datetime import datetime
+import os
 
 
 def matrix_mult(arr_1, arr_2, result_arr, start, end):
@@ -17,13 +17,24 @@ def matrix_mult(arr_1, arr_2, result_arr, start, end):
             row_sum = 0
 
 if __name__ == '__main__':
-    debug = False
-    num_runs = 20
-    n_range = range(10, 300, 20)
-    thread_list = [1, 2, 4, 8, 12]
-    result_dir = 'benchmark_results/'
     platform = 'mac'
     benchmark = 'matrix_mult'
+    debug = False
+    omp_threads_only = True
+    num_runs = 20
+    n_range = range(10, 520, 20)
+    thread_list = [1, 2, 4, 8]
+    j_home = os.getenv('JYTHON_HOME') if os.getenv('JYTHON_HOME').endswith('/') else os.getenv('JYTHON_HOME') + '/'
+    result_dir = j_home + 'preprocessor/benchmark_results/' + platform + ('/omp_threads_only/' if omp_threads_only else '/standard/') + benchmark + '/'
+
+    # create result directory if needed
+    if not os.path.exists(result_dir):
+        try:
+            os.makedirs(os.path.dirname(result_dir))
+        except OSError as exc: # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise Exception('Error: Could not create result directory')
+
     file_name = result_dir + datetime.now().strftime("%Y_%m_%d--%I_%M")
     file_name += '__' + platform + '__' + benchmark + '__runs_' + str(num_runs) + '__.csv'
 
@@ -48,8 +59,8 @@ if __name__ == '__main__':
                 p_result_arr = jarray.array([], float)
                 s_result_arr = jarray.array([], float)
 
-                serial_time = 9999999999999
-                parallel_time = 9999999999999
+                serial_time = sys.maxsize
+                parallel_time = sys.maxsize
 
                 for i in range(n*n):
                     arr_1.append(float(i))
@@ -61,13 +72,13 @@ if __name__ == '__main__':
                     p_result_arr.append(0.0)
                     s_result_arr.append(0.0)
 
-                if debug or num_threads == 1:
+                if debug or (num_threads == 1 and not omp_threads_only):
                     s_start = time()
                     matrix_mult(arr_1, arr_2, s_result_arr, 0, n)
                     s_end = time()
                     serial_time = s_end - s_start
 
-                if debug or num_threads > 1:
+                if debug or num_threads > 1 or omp_threads_only:
                     p_start = time()
                     #omp parallel num_threads(num_threads)
                         chunk = int(n / num_threads)
@@ -83,7 +94,7 @@ if __name__ == '__main__':
                     if s_result_arr != p_result_arr:
                         raise Exception('results don\'t match!')
 
-                if num_threads == 1:
+                if num_threads == 1 and not omp_threads_only:
                     run_results.append(serial_time)
                 else:
                     run_results.append(parallel_time)

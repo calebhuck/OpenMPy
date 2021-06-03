@@ -14,6 +14,7 @@ import jarray
 from time import time
 import csv
 from datetime import datetime
+import os
 def matrix_mult(arr_1, arr_2, result_arr, start, end):
     row_sum = 0
     for i in range(start, end):
@@ -25,9 +26,10 @@ def matrix_mult(arr_1, arr_2, result_arr, start, end):
 if __name__ == '__main__':
     debug = False
     num_runs = 20
-    n_range = range(10, 300, 20)
-    thread_list = [1, 2, 4, 8, 12]
-    result_dir = 'benchmark_results/'
+    n_range = range(10, 520, 20)
+    thread_list = [1, 2, 4, 8]
+    j_home = os.getenv('JYTHON_HOME') if os.getenv('JYTHON_HOME').endswith('/') else os.getenv('JYTHON_HOME') + '/'
+    result_dir = j_home + 'preprocessor/benchmark_results/omp_threads/'
     platform = 'mac'
     benchmark = 'matrix_mult'
     file_name = result_dir + datetime.now().strftime("%Y_%m_%d--%I_%M")
@@ -57,12 +59,12 @@ if __name__ == '__main__':
                 for i in range(n * n):
                     p_result_arr.append(0.0)
                     s_result_arr.append(0.0)
-                if debug or num_threads == 1:
+                if debug:
                     s_start = time()
                     matrix_mult(arr_1, arr_2, s_result_arr, 0, n)
                     s_end = time()
                     serial_time = s_end - s_start
-                if debug or num_threads > 1:
+                if True:
                     p_start = time()
                     _num_threads_ = num_threads
                     def _target_0(_manager_):
@@ -79,10 +81,11 @@ if __name__ == '__main__':
                 if debug:
                     if s_result_arr != p_result_arr:
                         raise Exception('results don\'t match!')
-                if num_threads == 1:
+                '''if num_threads == 1:
                     run_results.append(serial_time)
                 else:
-                    run_results.append(parallel_time)
+                    run_results.append(parallel_time)'''
+                run_results.append(parallel_time)
             avg = 0
             for result_index in range(num_runs):
                 avg += run_results[result_index]

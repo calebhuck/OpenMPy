@@ -1,21 +1,33 @@
-import sys
 import jarray
 from time import time
 from ompy.omp import *
 import csv
 from datetime import datetime
+import os
+
 
 if __name__ == '__main__':
-
     debug = False               # if set to true, serial and omp will both be run and results are compared at the end
+    omp_threads_only = True
+    platform = 'mac'
+    benchmark = 'sum'
+    j_home = os.getenv('JYTHON_HOME') if os.getenv('JYTHON_HOME').endswith('/') else os.getenv('JYTHON_HOME') + '/'
+    result_dir = j_home + 'preprocessor/benchmark_results/' + platform + ('/omp_threads_only/' if omp_threads_only else '/standard/') + benchmark + '/'
+
+    # create result directory if needed
+    if not os.path.exists(result_dir):
+        try:
+            os.makedirs(os.path.dirname(result_dir + '.keep'))
+        except OSError as exc: # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise Exception('Error: Could not create result directory')
+
+    file_name = result_dir + datetime.now().strftime("%Y_%m_%d--%I_%M")
+    file_name += '__' + platform + '__' + benchmark + '__runs_' + str(num_runs) + '__.csv'
+
     num_runs = 20               # number of runs for each thread/n combination. average accross runs is stored at the end
     n_range = range(100, 500000, 5000)
     thread_list = [1, 2, 4, 8, 12]
-    result_dir = 'benchmark_results/'
-    platform = 'mac'
-    benchmark = 'sum'
-    file_name = result_dir + datetime.now().strftime("%Y_%m_%d--%I_%M")
-    file_name += '__' + platform + '__' + benchmark + '__runs_' + str(num_runs) + '__.csv'
 
     n_vals_row = list(n_range)[:]
     n_vals_row.insert(0, None)
@@ -43,14 +55,14 @@ if __name__ == '__main__':
                 for i in range(n):
                     arr.append(1)
 
-                if debug or num_threads == 1:
+                if debug or (num_threads == 1 and not omp_threads_only):
                     s_start = time()
                     for i in range(n):
                         s_sum += arr[i]
                     s_end = time()
                     serial_time = s_end - s_start
 
-                if debug or num_threads > 1:
+                if debug or num_threads > 1 or omp_threads_only:
                     p_start = time()
                     #omp parallel num_threads(num_threads) reduction(+:p_sum)
                         #omp for schedule(static)
@@ -63,7 +75,7 @@ if __name__ == '__main__':
                     if s_sum != p_sum:
                         raise Exception('results don\'t match!')
 
-                if num_threads == 1:
+                if num_threads == 1 and not omp_threads_only:
                     run_results.append(serial_time)
                 else:
                     run_results.append(parallel_time)

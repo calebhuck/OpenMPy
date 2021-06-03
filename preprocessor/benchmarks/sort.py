@@ -4,7 +4,7 @@ from ompy.omp import *
 import csv
 from datetime import datetime
 from random import randint
-
+import os
 
 
 def b_sort(arr):
@@ -34,14 +34,26 @@ def merge(arr1, arr2):
 
 if __name__ == '__main__':
     debug = False
+    omp_threads_only = True
+    platform = 'mac'
+    benchmark = 'bubble_sort'
+    j_home = os.getenv('JYTHON_HOME') if os.getenv('JYTHON_HOME').endswith('/') else os.getenv('JYTHON_HOME') + '/'
+    result_dir = j_home + 'preprocessor/benchmark_results/' + platform + ('/omp_threads_only/' if omp_threads_only else '/standard/') + benchmark + '/'
+
+    # create result directory if needed
+    if not os.path.exists(result_dir):
+        try:
+            os.makedirs(os.path.dirname(result_dir))
+        except OSError as exc: # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise Exception('Error: Could not create result directory')
+
+    file_name = result_dir + datetime.now().strftime("%Y_%m_%d--%I_%M")
+    file_name += '__' + platform + '__' + benchmark + '__runs_' + str(num_runs) + '__.csv'
+
     num_runs = 20
     n_range = range(10, 1000, 10)
     thread_list = [1, 2, 4, 8, 12]
-    result_dir = 'benchmark_results/'
-    platform = 'mac'
-    benchmark = 'bubble_sort'
-    file_name = result_dir + datetime.now().strftime("%Y_%m_%d--%I_%M")
-    file_name += '__' + platform + '__' + benchmark + '__runs_' + str(num_runs) + '__.csv'
 
     n_vals_row = list(n_range)[:]
     n_vals_row.insert(0, None)
@@ -68,7 +80,7 @@ if __name__ == '__main__':
                     arr_1.append(randint(0, 10000))
                 arr_2 = arr_1[:]
 
-                if debug or num_threads == 1:
+                if debug or (num_threads == 1 and not omp_threads_only):
                     s_start = time()
                     for i in range(n):
                         swapped = False
@@ -84,7 +96,7 @@ if __name__ == '__main__':
 
                 result = jarray.array([], int)
 
-                if debug or num_threads > 1:
+                if debug or num_threads > 1 or omp_threads_only:
                     p_start = time()
 
 
@@ -107,7 +119,7 @@ if __name__ == '__main__':
                     if result != arr_1:
                         raise Exception('results don\'t match!')
 
-                if num_threads == 1:
+                if num_threads == 1 and not omp_threads_only:
                     run_results.append(serial_time)
                 else:
                     run_results.append(parallel_time)
