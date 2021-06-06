@@ -1,6 +1,5 @@
 import jarray
 from time import time
-from ompy.omp import *
 import csv
 from datetime import datetime
 from random import randint
@@ -35,8 +34,11 @@ def merge(arr1, arr2):
 if __name__ == '__main__':
     debug = False
     omp_threads_only = True
-    platform = 'mac'
+    platform = 'windows'
     benchmark = 'bubble_sort'
+    num_runs = 20
+    n_range = range(100, 10100, 100)
+    thread_list = [1, 2, 4, 8, 12]
     j_home = os.getenv('JYTHON_HOME') if os.getenv('JYTHON_HOME').endswith('/') else os.getenv('JYTHON_HOME') + '/'
     result_dir = j_home + 'preprocessor/benchmark_results/' + platform + ('/omp_threads_only/' if omp_threads_only else '/standard/') + benchmark + '/'
 
@@ -44,16 +46,12 @@ if __name__ == '__main__':
     if not os.path.exists(result_dir):
         try:
             os.makedirs(os.path.dirname(result_dir))
-        except OSError as exc: # Guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise Exception('Error: Could not create result directory')
+            open(result_dir + '.keep', 'a').close()
+        except OSError as exc:
+            raise Exception('Error: Could not create result directory')
 
     file_name = result_dir + datetime.now().strftime("%Y_%m_%d--%I_%M")
     file_name += '__' + platform + '__' + benchmark + '__runs_' + str(num_runs) + '__.csv'
-
-    num_runs = 20
-    n_range = range(10, 1000, 10)
-    thread_list = [1, 2, 4, 8, 12]
 
     n_vals_row = list(n_range)[:]
     n_vals_row.insert(0, None)
