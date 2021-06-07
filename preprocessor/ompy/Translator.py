@@ -18,8 +18,8 @@ class Translator(GrammarVisitor):
         #self.printer.println('sys.path.append(\'/Users/calebhuck/PycharmProjects/OpenMPy/ompy/\')')
         #self.printer.println('sys.path.append(\'/home/pi/PycharmProjects/OpenMPy/ompy\')')
 
-        self.printer.println('import jarray')
-        self.printer.println('from omp import *')
+        self.printer.println('from jarray import array, zeros')
+        #self.printer.println('from omp import *')
         self.printer.println('from runtime import *')
         #self.printer.println('try:')
         #self.printer.indent()
@@ -315,22 +315,6 @@ class Translator(GrammarVisitor):
     # Visit a parse tree produced by GrammarParser#barrier_directive.
     def visitBarrier_directive(self, ctx: GrammarParser.Barrier_directiveContext):
         self.printer.println('_manager_.barrier()')
-
-    # Visit a parse tree produced by GrammarParser#atomic_directive.
-    def visitAtomic_directive(self, ctx: GrammarParser.Atomic_directiveContext):
-        self.printer.println('if get_num_threads() > 1:')
-        self.printer.indent()
-        self.printer.println('_manager_.atomic_lock.acquire()')
-        str = ctx.NAME().getSymbol().text + ' '
-        '''if ctx.getChildCount() == 7:
-            self.printer.print(ctx.getChild(3).getSymbol().text)
-            self.printer.print(ctx.getChild(4).getSymbol().text + ' ')
-        else:'''
-        str += ctx.getChild(3).getSymbol().text + ' '
-        str += self.visitExpr(ctx.expr())
-        self.printer.println(str)
-        self.printer.println('_manager_.atomic_lock.release()')
-        self.printer.dedent()
 
     # Visit a parse tree produced by GrammarParser#num_threads_clause.
     def visitNum_threads_clause(self, ctx: GrammarParser.Num_threadsContext):

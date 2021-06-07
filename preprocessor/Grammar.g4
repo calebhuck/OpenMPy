@@ -143,7 +143,6 @@ omp_directive: parallel_directive
              | sections_directive
              | parallel_sections_directive
              | barrier_directive
-             | atomic_directive
              | critical_directive
              | master_directive
              | single_directive
@@ -159,7 +158,6 @@ master_directive: 'master' suite;
 single_directive: 'single' suite;
 critical_directive: 'critical' suite;
 barrier_directive: 'barrier' NEWLINE;
-atomic_directive: 'atomic' NEWLINE NAME ('+=' | '*=' | '/=' | '-=' | '=') expr NEWLINE; // separate from critical?
 
 // OpenMP Clauses
 num_threads: 'num_threads(' argument ')' ;

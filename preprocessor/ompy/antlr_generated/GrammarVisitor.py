@@ -79,11 +79,6 @@ class GrammarVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by GrammarParser#atomic_directive.
-    def visitAtomic_directive(self, ctx:GrammarParser.Atomic_directiveContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by GrammarParser#num_threads.
     def visitNum_threads(self, ctx:GrammarParser.Num_threadsContext):
         return self.visitChildren(ctx)

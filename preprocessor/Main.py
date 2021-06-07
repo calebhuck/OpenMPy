@@ -24,6 +24,7 @@ def main():
     elif platform == 'nt':
         if j_home[:-1] != '\\':
             j_home = j_home + '\\'
+    j_home.replace('\\', '\\\\')
 
 
     err_output = StringIO()
