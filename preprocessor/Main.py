@@ -45,7 +45,7 @@ def main():
         if platform == 'posix':
             print('sys.path.append(\'' + j_home + 'preprocessor/ompy\')')
         elif platform == 'nt':
-            print('sys.path.append(\'' + j_home + 'preprocessor\\ompy\')')
+            print('sys.path.append(\'' + j_home + 'preprocessor\\\\ompy\')')
         else:
             raise Exception('Error: unrecognized platform {}. Should be posix or nt'.format(platform))
         print(printer.get_source())
