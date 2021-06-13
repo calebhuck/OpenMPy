@@ -4,6 +4,7 @@ from time import time
 import csv
 from datetime import datetime
 import os
+from omp import *
 
 
 def matrix_mult(arr_1, arr_2, result_arr, start, end):
@@ -17,12 +18,12 @@ def matrix_mult(arr_1, arr_2, result_arr, start, end):
             row_sum = 0
 
 if __name__ == '__main__':
-    platform = 'windows'
+    platform = 'mac'
     benchmark = 'matrix_mult'
     debug = False
     omp_threads_only = True
-    num_runs = 20
-    n_range = range(10, 520, 20)
+    num_runs = 5
+    n_range = range(10, 250, 20)
     thread_list = [1, 2, 4, 8, 12]
     j_home = os.getenv('JYTHON_HOME') if os.getenv('JYTHON_HOME').endswith('/') else os.getenv('JYTHON_HOME') + '/'
     result_dir = j_home + 'preprocessor/benchmark_results/' + platform + ('/omp_threads_only/' if omp_threads_only else '/standard/') + benchmark + '/'
@@ -54,10 +55,10 @@ if __name__ == '__main__':
             run_results = []
             for run in range(num_runs):
 
-                arr_1 = jarray.array([], float)
-                arr_2 = jarray.array([], float)
-                p_result_arr = jarray.array([], float)
-                s_result_arr = jarray.array([], float)
+                arr_1 = jarray.array([], 'f')
+                arr_2 = jarray.array([], 'f')
+                p_result_arr = jarray.array([], 'f')
+                s_result_arr = jarray.array([], 'f')
 
                 serial_time = sys.maxsize
                 parallel_time = sys.maxsize

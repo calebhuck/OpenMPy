@@ -1,9 +1,11 @@
+import sys
 import jarray
 from time import time
 import csv
 from datetime import datetime
 from random import randint
 import os
+from omp import *
 
 
 def b_sort(arr):
@@ -32,12 +34,12 @@ def merge(arr1, arr2):
     return result
 
 if __name__ == '__main__':
-    debug = False
+    debug = True
     omp_threads_only = True
-    platform = 'windows'
+    platform = 'mac'
     benchmark = 'bubble_sort'
     num_runs = 20
-    n_range = range(100, 10100, 100)
+    n_range = range(100, 1100, 100)
     thread_list = [1, 2, 4, 8, 12]
     j_home = os.getenv('JYTHON_HOME') if os.getenv('JYTHON_HOME').endswith('/') else os.getenv('JYTHON_HOME') + '/'
     result_dir = j_home + 'preprocessor/benchmark_results/' + platform + ('/omp_threads_only/' if omp_threads_only else '/standard/') + benchmark + '/'
@@ -71,8 +73,8 @@ if __name__ == '__main__':
 
                 arr_1 = jarray.array([], int)
                 arr_2 = jarray.array([], int)
-                serial_time = 9999999999999
-                parallel_time = 9999999999999
+                serial_time = sys.maxsize
+                parallel_time = sys.maxsize
 
                 for i in range(n):
                     arr_1.append(randint(0, 10000))
