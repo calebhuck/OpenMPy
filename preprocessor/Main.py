@@ -41,6 +41,7 @@ def main():
     if err_output.getvalue() != '':
         print(err_output.getvalue())
     else:
+        print('#jython program')
         print('import sys')
         if platform == 'posix':
             print('sys.path.append(\'' + j_home + 'preprocessor/ompy\')')

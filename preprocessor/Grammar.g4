@@ -150,7 +150,7 @@ omp_directive: parallel_directive
 // OpenMP Directives
 parallel_directive: 'parallel' (num_threads | shared | private_ | reduction)* suite ;
 parallel_for_directive: 'parallel' 'for' (num_threads | schedule | shared | private_ | reduction)* for_suite ;
-for_directive: 'for' schedule? private_? for_suite ;
+for_directive: 'for' schedule? private_? for_suite ; // FIX private *******************************************************************
 parallel_sections_directive: 'parallel' 'sections' num_threads? sections_suite;
 sections_directive: 'sections' sections_suite ;
 section_directive: 'section' suite;
